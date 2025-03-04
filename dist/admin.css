@@ -2625,6 +2625,7 @@ body.nav-collapsed .cms-global-search__result {
 }
 .cms-global-search .search-wrapper {
   position: relative;
+  margin-bottom: 0;
 }
 .cms-global-search .search-wrapper:before {
   background-image: url("../icons/icons.svg");
@@ -4129,6 +4130,10 @@ body.ozz-cms[data-theme=dark] .ozz-block-editor__block-picker li.pick-block:hove
 }
 body.ozz-cms[data-theme=dark] .ozz-block-editor-wrapper.expanded {
   background: #1f222e;
+}
+body.ozz-cms[data-theme=dark] .ozz-wyg__editor-area {
+  background-color: #1f222e;
+  border-color: #3d4053;
 }
 body.ozz-cms[data-theme=dark] .ozz-media-manager__breadcrumb, body.ozz-cms[data-theme=dark] .ozz-media-manager__actions, body.ozz-cms[data-theme=dark] .ozz-media-manager__viewer, body.ozz-cms[data-theme=dark] .ozz-media-manager__media {
   background: #2B2E3F;

@@ -364,6 +364,13 @@ body.ozz-cms[data-theme="dark"]{
       background: color(dark);
     }
   }
+  // Ozz Wyg
+  .ozz-wyg {
+    &__editor-area {
+      background-color: color(dark);
+      border-color: color(dark2);
+    }
+  }
   // Media Manager
   .ozz-media-manager {
     &__breadcrumb,

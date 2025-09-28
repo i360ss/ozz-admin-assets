@@ -113,9 +113,11 @@ body.ozz-cms {
         grid-template-columns: 0.6fr 2fr;
       }
       label {
+        overflow-wrap: anywhere;
         font-size: $font-small-3;
       }
       .value {
+        overflow-wrap: anywhere;
         line-height: 1.5;
         font-size: $font-small-3;
       }

@@ -4324,9 +4324,11 @@ body.ozz-cms.view-form-entry .entry-data .ozz-widget__item-raw {
   grid-template-columns: 0.6fr 2fr;
 }
 body.ozz-cms.view-form-entry .entry-data label {
+  overflow-wrap: anywhere;
   font-size: 15px;
 }
 body.ozz-cms.view-form-entry .entry-data .value {
+  overflow-wrap: anywhere;
   line-height: 1.5;
   font-size: 15px;
 }

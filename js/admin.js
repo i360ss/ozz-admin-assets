@@ -12,6 +12,7 @@ import ChangeTheme from './modules/ChangeTheme';
 import SlugUpdate from './modules/SlugUpdate';
 import RelocatePostInfoComp from './modules/RelocatePostInfoComp';
 import InitOzzWyg from './modules/InitOzzWyg';
+import LinkField from './modules/LinkField';
 import Taxonomy from './modules/Taxonomy';
 import Forms from './modules/Forms';
 
@@ -31,7 +32,11 @@ import Forms from './modules/Forms';
   InitOzzWyg();
   Taxonomy();
   Forms();
+  LinkField();
 
   const repeaterField = new RepeaterField();
-  repeaterField.initRepeater(false, MediaManagerPopup);
+  repeaterField.initRepeater(false, () => {
+    MediaManagerPopup();
+    LinkField();
+  });
 })();

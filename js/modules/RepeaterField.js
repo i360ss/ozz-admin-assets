@@ -114,7 +114,7 @@ class RepeaterField {
         this.repeater__renameFields();
 
         // bind events for new item
-        if (typeof bindEvents == 'function') {
+        if (typeof bindEvents === 'function') {
           bindEvents();
         }
       });

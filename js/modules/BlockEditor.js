@@ -4,6 +4,7 @@ import Sortable from '../vendor/Sortable';
 import { SetState, GetState } from '../utils/State';
 import FormHandler from './FormHandler';
 import MediaManagerPopup from './MediaManagerPopup';
+import LinkField from './LinkField';
 
 export default () => {
   if(document.querySelectorAll('.ozz-block-editor').length === 0) return;
@@ -113,8 +114,12 @@ export default () => {
         draggedItem.innerHTML = `${initialDOM} <div class="ozz-accordion-body">${thisBlockFormDOM.innerHTML}</div>`;
 
         addCommonEvents(draggedItem);
-        repeaterField.initRepeater(draggedItem, MediaManagerPopup);
+        repeaterField.initRepeater(draggedItem, () => {
+          MediaManagerPopup();
+          LinkField();
+        });
         MediaManagerPopup(draggedItem);
+        LinkField();
         if (typeof OzzWyg === 'function') {
           new OzzWyg({ selector: '[data-ozz-wyg]' });
         }
@@ -183,6 +188,7 @@ export default () => {
           indexFieldNames();
           repeaterField.initRepeater(blockClone);
           MediaManagerPopup(blockClone);
+          LinkField();
         });
 
         // Block accordion event

@@ -83,6 +83,8 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
       var _FormHandler__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./FormHandler */"./js/modules/FormHandler.js");
       /* harmony import */
       var _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./MediaManagerPopup */"./js/modules/MediaManagerPopup.js");
+      /* harmony import */
+      var _LinkField__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./LinkField */"./js/modules/LinkField.js");
 
       /* harmony default export */
       var __WEBPACK_DEFAULT_EXPORT__ = function __WEBPACK_DEFAULT_EXPORT__() {
@@ -171,8 +173,12 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               draggedItem.classList.add('ozz-used-block');
               draggedItem.innerHTML = "".concat(initialDOM, " <div class=\"ozz-accordion-body\">").concat(thisBlockFormDOM.innerHTML, "</div>");
               addCommonEvents(draggedItem);
-              repeaterField.initRepeater(draggedItem, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_5__["default"]);
+              repeaterField.initRepeater(draggedItem, function () {
+                (0, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_5__["default"])();
+                (0, _LinkField__WEBPACK_IMPORTED_MODULE_6__["default"])();
+              });
               (0, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_5__["default"])(draggedItem);
+              (0, _LinkField__WEBPACK_IMPORTED_MODULE_6__["default"])();
               if (typeof _vendor_ozz_wyg__WEBPACK_IMPORTED_MODULE_1__["default"] === 'function') {
                 new _vendor_ozz_wyg__WEBPACK_IMPORTED_MODULE_1__["default"]({
                   selector: '[data-ozz-wyg]'
@@ -242,8 +248,12 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 addCommonEvents(blockClone);
                 blockFormLoader.appendChild(blockClone);
                 indexFieldNames();
-                repeaterField.initRepeater(blockClone);
+                repeaterField.initRepeater(blockClone, function () {
+                  (0, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_5__["default"])(blockClone);
+                  (0, _LinkField__WEBPACK_IMPORTED_MODULE_6__["default"])();
+                });
                 (0, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_5__["default"])(blockClone);
+                (0, _LinkField__WEBPACK_IMPORTED_MODULE_6__["default"])();
               });
 
               // Block accordion event
@@ -531,6 +541,72 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             selector: '[data-ozz-wyg]'
           });
         }
+      };
+
+      /***/
+    }),
+    /***/"./js/modules/LinkField.js": (
+    /*!*********************************!*\
+      !*** ./js/modules/LinkField.js ***!
+      \*********************************/
+    /***/
+    function _js_modules_LinkFieldJs(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+      __webpack_require__.r(__webpack_exports__);
+      /* harmony export */
+      __webpack_require__.d(__webpack_exports__, {
+        /* harmony export */"default": function _default() {
+          return __WEBPACK_DEFAULT_EXPORT__;
+        }
+        /* harmony export */
+      });
+      /* harmony default export */
+      var __WEBPACK_DEFAULT_EXPORT__ = function __WEBPACK_DEFAULT_EXPORT__() {
+        var linkFields = document.querySelectorAll('[data-ozz-link-field]');
+        if (!linkFields) return;
+        var setLinkFieldTypes = function setLinkFieldTypes(field) {
+          var linkType = field.querySelector('[data-link-type]'),
+            linkPost = field.querySelector('[data-link-post]'),
+            linkTitle = field.querySelector('[data-link-title]'),
+            linkUrl = field.querySelector('[data-link-url]'),
+            linkTarget = field.querySelector('[data-link-target]'),
+            linkRel = field.querySelector('[data-link-rel]'),
+            linkAria = field.querySelector('[data-link-aria]'),
+            linkClass = field.querySelector('[data-link-class]'),
+            actualJSONField = field.querySelector('[data-link-actual-value-json]');
+          var realValues = {
+            'type': linkType.value,
+            'post_id': linkPost.value,
+            'title': linkTitle.value,
+            'url': linkUrl.value,
+            'target': linkTarget.value,
+            'rel': linkRel.value,
+            'aria_label': linkAria.value,
+            'class': linkClass.value
+          };
+          if (linkType.value === 'internal') {
+            linkPost.closest('.ozz-fm__field').classList.remove('hide');
+            linkPost.closest('.ozz-fm__field').classList.add('show');
+            linkTitle.closest('.ozz-fm__field').classList.remove('show');
+            linkTitle.closest('.ozz-fm__field').classList.add('hide');
+            linkUrl.closest('.ozz-fm__field').classList.remove('show');
+            linkUrl.closest('.ozz-fm__field').classList.add('hide');
+          } else {
+            linkPost.closest('.ozz-fm__field').classList.remove('show');
+            linkPost.closest('.ozz-fm__field').classList.add('hide');
+            linkTitle.closest('.ozz-fm__field').classList.remove('hide');
+            linkTitle.closest('.ozz-fm__field').classList.add('show');
+            linkUrl.closest('.ozz-fm__field').classList.remove('hide');
+            linkUrl.closest('.ozz-fm__field').classList.add('show');
+          }
+          actualJSONField.value = JSON.stringify(realValues);
+        };
+        linkFields.forEach(function (field) {
+          field.addEventListener('load', setLinkFieldTypes(field));
+          field.addEventListener('input', function (e) {
+            e.preventDefault();
+            setLinkFieldTypes(field);
+          });
+        });
       };
 
       /***/
@@ -1357,7 +1433,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 _this5.repeater__renameFields();
 
                 // bind events for new item
-                if (typeof bindEvents == 'function') {
+                if (typeof bindEvents === 'function') {
                   bindEvents();
                 }
               });
@@ -6338,9 +6414,11 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
     /* harmony import */
     var _modules_InitOzzWyg__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./modules/InitOzzWyg */"./js/modules/InitOzzWyg.js");
     /* harmony import */
-    var _modules_Taxonomy__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./modules/Taxonomy */"./js/modules/Taxonomy.js");
+    var _modules_LinkField__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./modules/LinkField */"./js/modules/LinkField.js");
     /* harmony import */
-    var _modules_Forms__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./modules/Forms */"./js/modules/Forms.js");
+    var _modules_Taxonomy__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./modules/Taxonomy */"./js/modules/Taxonomy.js");
+    /* harmony import */
+    var _modules_Forms__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./modules/Forms */"./js/modules/Forms.js");
     // Modules
 
     (function () {
@@ -6357,10 +6435,14 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
       (0, _modules_SlugUpdate__WEBPACK_IMPORTED_MODULE_10__["default"])();
       (0, _modules_RelocatePostInfoComp__WEBPACK_IMPORTED_MODULE_11__["default"])();
       (0, _modules_InitOzzWyg__WEBPACK_IMPORTED_MODULE_12__["default"])();
-      (0, _modules_Taxonomy__WEBPACK_IMPORTED_MODULE_13__["default"])();
-      (0, _modules_Forms__WEBPACK_IMPORTED_MODULE_14__["default"])();
+      (0, _modules_Taxonomy__WEBPACK_IMPORTED_MODULE_14__["default"])();
+      (0, _modules_Forms__WEBPACK_IMPORTED_MODULE_15__["default"])();
+      (0, _modules_LinkField__WEBPACK_IMPORTED_MODULE_13__["default"])();
       var repeaterField = new _modules_RepeaterField__WEBPACK_IMPORTED_MODULE_3__["default"]();
-      repeaterField.initRepeater(false, _modules_MediaManagerPopup__WEBPACK_IMPORTED_MODULE_7__["default"]);
+      repeaterField.initRepeater(false, function () {
+        (0, _modules_MediaManagerPopup__WEBPACK_IMPORTED_MODULE_7__["default"])();
+        (0, _modules_LinkField__WEBPACK_IMPORTED_MODULE_13__["default"])();
+      });
     })();
   })();
 

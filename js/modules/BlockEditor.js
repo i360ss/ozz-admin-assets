@@ -186,7 +186,10 @@ export default () => {
           addCommonEvents(blockClone);
           blockFormLoader.appendChild(blockClone);
           indexFieldNames();
-          repeaterField.initRepeater(blockClone);
+          repeaterField.initRepeater(blockClone, () => {
+            MediaManagerPopup(blockClone);
+            LinkField();
+          });
           MediaManagerPopup(blockClone);
           LinkField();
         });

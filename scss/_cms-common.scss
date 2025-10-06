@@ -299,6 +299,21 @@ a {
       }
     }
   }
+  // Custom fields with sub fields
+  &__custom-field-group {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(color(semi-blue), 0.3);
+    .ozz-fm__field {
+      margin-bottom: 10px;
+    }
+  }
+  &__link-field {
+    background: rgba(color(semi-blue), 0.05);
+    .grid {
+      gap: 0 16px;
+    }
+  }
 }
 
 // Checkbox / Radio

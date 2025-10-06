@@ -25,19 +25,19 @@ export default () => {
     };
 
     if (linkType.value === 'internal') {
-      linkPost.closest('.sub-field-wrapper').classList.remove('hide');
-      linkPost.closest('.sub-field-wrapper').classList.add('show');
-      linkTitle.closest('.sub-field-wrapper').classList.remove('show');
-      linkTitle.closest('.sub-field-wrapper').classList.add('hide');
-      linkUrl.closest('.sub-field-wrapper').classList.remove('show');
-      linkUrl.closest('.sub-field-wrapper').classList.add('hide');
+      linkPost.closest('.ozz-fm__field').classList.remove('hide');
+      linkPost.closest('.ozz-fm__field').classList.add('show');
+      linkTitle.closest('.ozz-fm__field').classList.remove('show');
+      linkTitle.closest('.ozz-fm__field').classList.add('hide');
+      linkUrl.closest('.ozz-fm__field').classList.remove('show');
+      linkUrl.closest('.ozz-fm__field').classList.add('hide');
     } else {
-      linkPost.closest('.sub-field-wrapper').classList.remove('show');
-      linkPost.closest('.sub-field-wrapper').classList.add('hide');
-      linkTitle.closest('.sub-field-wrapper').classList.remove('hide');
-      linkTitle.closest('.sub-field-wrapper').classList.add('show');
-      linkUrl.closest('.sub-field-wrapper').classList.remove('hide');
-      linkUrl.closest('.sub-field-wrapper').classList.add('show');
+      linkPost.closest('.ozz-fm__field').classList.remove('show');
+      linkPost.closest('.ozz-fm__field').classList.add('hide');
+      linkTitle.closest('.ozz-fm__field').classList.remove('hide');
+      linkTitle.closest('.ozz-fm__field').classList.add('show');
+      linkUrl.closest('.ozz-fm__field').classList.remove('hide');
+      linkUrl.closest('.ozz-fm__field').classList.add('show');
     }
 
     actualJSONField.value = JSON.stringify(realValues);

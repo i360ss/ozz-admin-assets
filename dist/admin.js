@@ -1849,6 +1849,10 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }
         /* harmony export */
       });
+      var DOMAIN_KEY = window.location.host.replace(/[^a-zA-Z0-9]/g, '_');
+      var STORAGE_KEY = "ozz_app_state_".concat(DOMAIN_KEY);
+
+      // Default state
       var ozz_app_state = {
         nav_collapsed: false,
         block_editor_expanded: false,
@@ -1859,29 +1863,25 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
       };
 
       /**
-       * Get State (Session storage)
-       * @param {string} $key 
-       * @returns value
+       * Get State
        */
       function _GetState() {
-        var $key = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-        var hasItem = typeof sessionStorage !== 'undefined' && sessionStorage !== null && sessionStorage.getItem('ozz_app_state') !== null,
-          state = hasItem ? JSON.parse(sessionStorage.getItem('ozz_app_state')) : ozz_app_state;
-        return $key ? state[$key] : state;
+        var key = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+        var hasItem = typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY) !== null;
+        var state = hasItem ? JSON.parse(localStorage.getItem(STORAGE_KEY)) : ozz_app_state;
+        return key ? state[key] : state;
       }
 
       /**
-       * Set State (Session storage)
-       * @param {string} $key
-       * @param {*} $value
+       * Set State
        */
-      function _SetState($key, $value) {
-        var hasItem = typeof sessionStorage !== 'undefined' && sessionStorage !== null && sessionStorage.getItem('ozz_app_state') !== null;
-        var state = hasItem ? JSON.parse(sessionStorage.getItem('ozz_app_state')) : ozz_app_state;
-        state[$key] = $value;
+      function _SetState(key, value) {
+        var hasItem = typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY) !== null;
+        var state = hasItem ? JSON.parse(localStorage.getItem(STORAGE_KEY)) : ozz_app_state;
+        state[key] = value;
         ozz_app_state = state;
-        if (typeof sessionStorage !== 'undefined' && sessionStorage !== null) {
-          sessionStorage.setItem('ozz_app_state', JSON.stringify(state));
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         }
       }
 

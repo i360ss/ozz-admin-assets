@@ -1,3 +1,5 @@
+@use "./abstract/variables" as *;
+
 .post-edit-view {
   position: relative;
   &.has-tabs {
@@ -103,7 +105,7 @@
                 background-color: color(primary-dark);
               }
               span {
-                @include icon-duplicate(white);
+                @include icon-duplicate("white");
                 margin-top: 4px;
                 background-color: transparent;
                 &:hover {

@@ -1,3 +1,5 @@
+@use "./abstract/variables" as *;
+
 .ozz-block-editor-hidden-form-dom {
   display: none;
 }
@@ -106,10 +108,10 @@
       }
     }
     .lay1 {
-      background-position: -153px -113px;
+      background-position: -153px -112px;
     }
     .lay2 {
-      background-position: -188px -113px;
+      background-position: -188px -112px;
     }
   }
   &__block-picker-content {
@@ -126,7 +128,7 @@
       padding: 14px 10px 14px 26px;
       background: color(white);
       list-style: none;
-      border: 1px solid rgba(color(primary), 0.5);
+      border: 1px solid color(primary-50);
       border-radius: $radius1;
       text-align: left;
       font-size: $font-small-2;
@@ -148,7 +150,7 @@
         background: color(primary);
         color: color(white);
         &:before {
-          @include icon-draggable(white);
+          @include icon-draggable("white");
         }
       }
     }
@@ -160,10 +162,14 @@
     }
   }
   &__form-loader {
-    min-height: 450px;
+    min-height: 400px;
+    &:empty {
+      border: 1px dashed color(primary);
+      border-radius: 5px;
+    }
     .missing-block {
       padding: 14px 24px;
-      background: rgba(color(danger), 0.1);
+      background: color(danger-10);
       border-radius: $radius1;
       margin-bottom: 14px;
       p {
@@ -173,7 +179,7 @@
         }
       }
       .light-text {
-        color: rgba(color(danger), 0.8);
+        color: color(danger-80);
       }
     }
     li {

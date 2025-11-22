@@ -1,3 +1,5 @@
+@use "./abstract/variables" as *;
+
 .ozz-media-manager {
   &__breadcrumb,
   &__actions,
@@ -97,7 +99,7 @@
     overflow: hidden;
     cursor: pointer;
     &:hover {
-      box-shadow: 0 0 0 2px rgba(color(blue), 0.3);
+      box-shadow: 0 0 0 2px color(blue-30);
     }
     &.active {
       box-shadow: 0 0 0 2px color(primary);

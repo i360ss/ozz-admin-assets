@@ -1,3 +1,5 @@
+@use "./abstract/variables" as *;
+
 .breadcrumb {
   padding: 20px 0 10px;
   span {
@@ -62,27 +64,27 @@ a {
   }
   &.edit {
     @include icon-edit();
-    background-color: rgba(color(success), .2);
+    background-color: color(success-20);
   }
   &.delete {
     @include icon-delete();
-    background-color: rgba(color(danger), .2);
+    background-color: color(danger-20);
   }
   &.publish {
     @include icon-publish();
-    background-color: rgba(color(success), .2);
+    background-color: color(success-20);
   }
   &.draft {
     @include icon-draft();
-    background-color: rgba(color(warning), .2);
+    background-color: color(warning-20);
   }
   &.duplicate {
     @include icon-duplicate();
-    background-color: rgba(color(blue), .2);
+    background-color: color(blue-20);
   }
   &.save {
     @include icon-save();
-    background-color: rgba(color(success), .2);
+    background-color: color(success-20);
   }
 }
 
@@ -92,42 +94,42 @@ a {
   font-size: $font-small-2;
   border-radius: 5px;
   text-transform: capitalize;
-  background-color: rgba(color(silver), 0.3);
+  background-color: color(silver-30);
   &.trash,
   &.overdue {
     color: color(danger);
-    background-color: rgba(color(danger), .1);
+    background-color: color(danger-10);
   }
   &.danger,
   &.spam,
   &.cancelled {
     color: color(white);
-    background-color: rgba(color(danger), .7);
+    background-color: color(danger-70);
   }
   &.published,
   &.success,
   &.shipped,
   &.delivered {
     color: color(success);
-    background-color: rgba(color(success), .1);
+    background-color: color(success-10);
   }
   &.completed,
   &.done {
     color: color(white);
-    background-color: rgba(color(success), .7);
+    background-color: color(success-10);
   }
   &.draft,
   &.warning,
   &.pending,
   &.hold {
     color: color(warning);
-    background-color: rgba(color(warning), .1);
+    background-color: color(warning-10);
   }
   &.processing,
   &.info,
   &.returned {
     color: color(blue);
-    background-color: rgba(color(blue), .1);
+    background-color: color(blue-10);
   }
   // Status Dot
   &.dot {
@@ -210,7 +212,7 @@ a {
     input {
       width: 100%;
       padding: 8px;
-      background-color: rgba(color(primary), 0.03);
+      background-color: rgba(color-code("primary"), 0.03);
       &[type=color] {
         padding: 3px;
       }
@@ -303,13 +305,13 @@ a {
   &__custom-field-group {
     padding: 10px;
     border-radius: 6px;
-    border: 1px solid rgba(color(semi-blue), 0.3);
+    border: 1px solid color(semi-blue-30);
     .ozz-fm__field {
       margin-bottom: 10px;
     }
   }
   &__link-field {
-    background: rgba(color(semi-blue), 0.05);
+    background: color(semi-blue-10);
     .grid {
       gap: 0 16px;
     }
@@ -326,7 +328,7 @@ input[type="checkbox"] {
   height: 18px;
   background: color(light1);
   border-radius: 4px;
-  border: 1px solid rgba(color(semi-blue), 0.3);
+  border: 1px solid color(semi-blue-30);
   transition: .3s ease-in-out;
   &:checked {
     &:after {

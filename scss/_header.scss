@@ -1,4 +1,6 @@
 /* ----------HEADER ----------- */
+@use "./abstract/variables" as *;
+
 header {
   position: fixed;
   top: 0;

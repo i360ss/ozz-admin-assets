@@ -1,4 +1,6 @@
 /* ----------FORM ----------- */
+@use "./abstract/variables" as *;
+
 .ozz-fm,
 .form {
   * {
@@ -86,27 +88,26 @@
     &.error {
       .ozz-wyg__editor-area {
         border-color: color(danger);
-        background-color: rgba(color(danger), 0.03);
+        background-color: color(danger-10);
       }
     }
   }
   select,
   textarea,
   input {
-    width: calc(100% - 20px);
     padding: 10px;
-    border: 1px solid rgba(color(secondary),0.2);
+    border: 1px solid color(secondary-20);
     border-radius: 5px;
     &:not(input[type="submit"]) {
       transition: .3s ease-in-out;
       &:focus {
         border-color: color(primary);
-        box-shadow: 0 0 0 4px rgba(color(primary), 0.2);
+        box-shadow: 0 0 0 4px color(primary-20);
       }
     }
     &.error {
       border-color: color(danger);
-      background-color: rgba(color(danger), 0.03);
+      background-color: rgba(color-code("danger"), 0.03);
     }
   }
   textarea {
@@ -124,18 +125,18 @@
     text-align: center;
     &.success {
       color: color(success);
-      border: 1px solid rgba(color(success), 0.3);
-      background-color: rgba(color(success), 0.05);
+      border: 1px solid color(success-30);
+      background-color: color(success-10); // 0.05
     }
     &.warning {
       color: color(warning);
-      border: 1px solid rgba(color(warning), 0.3);
-      background-color: rgba(color(warning), 0.05);
+      border: 1px solid color(warning-30);
+      background-color: color(warning-10); // 0.05
     }
     &.danger {
       color: color(danger);
-      border: 1px solid rgba(color(danger), 0.3);
-      background-color: rgba(color(danger), 0.05);
+      border: 1px solid color(danger-30);
+      background-color: color(danger-10); // 0.05
     }
     a {
       display: contents;
@@ -162,7 +163,7 @@
   &__repeat {
     margin-bottom: 30px;
     padding: 4px 3px 4px 4px;
-    border: 1px solid rgba(color(semi-blue), 0.5);
+    border: 1px solid color(semi-blue-50);
     &,
     &-wrapper {
       border-radius: 5px;
@@ -260,7 +261,7 @@
           padding: 0 0 10px;
           margin-bottom: 10px;
           &:not(:last-of-type) {
-            border-bottom: 1px solid rgba(color(gray2), 0.5);
+            border-bottom: 1px solid color(gray2-50);
           }
           &-field {
             max-width: calc(100% - 130px);
@@ -314,9 +315,9 @@
         position: relative;
         width: 100px;
         height: 100px;
-        border: 2px solid rgba(color(light1), 0.2);
+        border: 2px solid color(light1-20);
         border-radius: 5px;
-        background-color: rgba(color(light1), 0.2);
+        background-color: color(light1-20);
         img {
           width: 96px;
           height: 96px;
@@ -335,7 +336,7 @@
           translate: -50% -50%;
           opacity: 0;
           cursor: pointer;
-          background-color: rgba(color(white), 0.8);
+          background-color: color(white-80);
           &::before {
             @include icon-delete;
             @include before-after;

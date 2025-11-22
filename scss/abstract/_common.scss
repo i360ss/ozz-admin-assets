@@ -1,4 +1,6 @@
 /* ---------- COMMON ----------- */
+@use "variables" as *;
+
 *{
   text-decoration: none;
   outline: none;
@@ -18,7 +20,7 @@ strong {
 .button{
   cursor: pointer;
   outline: none;
-  border: 1px solid rgba(color(dark), 0.2);
+  border: 1px solid color(dark-20);
   display: block;
   padding: 12px 24px;
   border-radius: 4px;
@@ -26,7 +28,7 @@ strong {
   font-size: $font-semi-normal;
   font-family: $rub-m;
   color: color(white);
-  box-shadow: 0 3px 2px -3px rgba(0,0,0,0.3), 0 -3px 8px 0 rgba(0,0,0,0.02) inset, 0 3px 8px 0 rgba(color(white), 0.3) inset;
+  box-shadow: 0 3px 2px -3px rgba(0,0,0,0.3), 0 -3px 8px 0 rgba(0,0,0,0.02) inset, 0 3px 8px 0 color(white-30) inset;
   &:hover {
     background-color: color(primary-dark);
   }
@@ -59,7 +61,7 @@ strong {
   }
   &.light {
     background-color: color(light2);
-    border: 1px solid rgba(color(gray1), 0.3);
+    border: 1px solid color(gray1-30);
     color: color(secondary);
     &:hover {
       background-color: color(light1);
@@ -105,7 +107,7 @@ strong {
     transition: .3s ease-in-out;
     animation: popup-anim .3s ease-in-out;
     box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-    background-color: rgba(color(white), 0.9);
+    background-color: color(white-90);
     &.success {
       color: color(success);
       border-right: 6px solid color(success);

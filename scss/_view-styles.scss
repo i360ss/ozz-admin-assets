@@ -1,3 +1,5 @@
+@use "./abstract/variables" as *;
+
 body.ozz-cms {
   &.view-dashboard {
     .recent-entries {
@@ -13,7 +15,7 @@ body.ozz-cms {
   // Settings View
   &.settings {
     .profile-image {
-      border: 5px solid color(light1);
+      border: 5px solid color(light1-10);
       border-radius: 50%;
       overflow: hidden;
       width: 90px;
@@ -26,6 +28,9 @@ body.ozz-cms {
         object-position: center;
         font-size: $font-small;
       }
+    }
+    .button {
+      width: auto;
     }
   }
   // Taxonomy
@@ -43,19 +48,19 @@ body.ozz-cms {
         &:not(input[type="submit"]) {
           &:focus {
             border-color: color(primary);
-            box-shadow: 0 0 0 4px rgba(color(primary), 0.2);
+            box-shadow: 0 0 0 4px color(primary-20);
             transition: .3s ease-in-out;
           }
         }
         &.error {
           border-color: color(danger);
-          background-color: rgba(color(danger), 0.03);
+          background-color: rgba(color-code("danger"), 0.03);
         }
       }
       tr {
         &:hover {
           input {
-            border-color: rgba(color(secondary),0.2);
+            border-color: color(secondary-20);
           }
           .terms-table__actions {
             opacity: 1;

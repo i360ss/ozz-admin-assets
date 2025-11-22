@@ -1,4 +1,6 @@
 // Dark theme
+@use "./abstract/variables" as *;
+
 @mixin dark-skin-1 {
   background: color(dark1);
   border: 1px solid color(dark2);
@@ -30,11 +32,12 @@ body.ozz-cms[data-theme="dark"]{
   // Buttons
   .button {
     &.light {
-      background-color: color(dark2);
+      background-color: color(dark1);
       color: color(silver);
-      border-color: rgba(color(gray1), 0.5);
+      border-color: color(gray1-20);
+      border-bottom: none;
       &:hover {
-        background-color: rgba(color(gray2), 0.5);
+        background-color: color(gray2-50);
         color: color(white);
       }
       &.active {
@@ -59,14 +62,14 @@ body.ozz-cms[data-theme="dark"]{
       background-color: color(dark2);
       .user-info {
         .light-text {
-          color: rgba(color(silver), 0.7);
+          color: color(silver-70);
         }
       }
     }
     &__language-switch {
       &:after {
         background-color: color(dark1);
-        border-color: color(dark2);
+        border-color: color(silver-20);
       }
       .dropdown {
         li {
@@ -124,7 +127,7 @@ body.ozz-cms[data-theme="dark"]{
   // Common alert bar
   .common-alert-bar {
     .message {
-      background: rgba(color(dark1), 0.9);
+      background: color(dark1-90);
     }
   }
   // breadcrumb
@@ -160,7 +163,7 @@ body.ozz-cms[data-theme="dark"]{
       }
       th {
         background: color(dark2);
-        color: rgba(color(light2), 0.5);
+        color: color(light2-50);
       }
       td {
         &.link-wrap {
@@ -172,13 +175,13 @@ body.ozz-cms[data-theme="dark"]{
         }
       }
       .slug {
-        background: rgba(color(silver), 0.05);
+        background: rgba(color-code("silver"), 0.05);
         border: 1px solid color(dark2);
         color: color(silver);
         border-radius: 5px;
       }
       .note {
-        color: rgba(color(light2), 0.5);
+        color: color(light2-50);
       }
       tr {
         box-shadow: $dark-shadow1;
@@ -261,7 +264,7 @@ body.ozz-cms[data-theme="dark"]{
     input {
       &:not([type="submit"]) {
         color: color(white);
-        border-color: rgba(color(silver), 0.2);
+        border-color: color(silver-10);
         background: rgba(0,0,0,0.1);
       }
       &:not(input[type="submit"]) {
@@ -276,14 +279,14 @@ body.ozz-cms[data-theme="dark"]{
     input[type="checkbox"] {
       &.switch {
         background: color(dark);
-        border-color: rgba(color(semi-blue), 0.2);
+        border-color: color(semi-blue-20);
         &:checked {
           background: color(primary);
         }
       }
     }
     &__repeat {
-      border-color: rgba(color(silver), 0.1);
+      border-color: color(silver-10);
     }
     &__repeat-top {
       @include dark-skin-2;
@@ -292,7 +295,7 @@ body.ozz-cms[data-theme="dark"]{
       color: color(light2);
     }
     &__repeat-head {
-      background: rgba(color(dark2), 0.5);
+      background: color(dark2-50);
       &:before,
       &:after {
         filter: brightness(5);
@@ -302,7 +305,7 @@ body.ozz-cms[data-theme="dark"]{
       color: color(silver);
     }
     &__repeat-remove {
-      background: rgba(color(silver), 0.2);
+      background: color(silver-20);
       &:hover {
         background: color(danger);
       }
@@ -315,7 +318,7 @@ body.ozz-cms[data-theme="dark"]{
       &.empty {
         border-color: color(dark2);
         .ozz-block-editor__empty-block {
-          color: rgba(color(semi-blue), 0.5);
+          color: color(semi-blue-50);
         }
       }
       .ozz-used-block {
@@ -466,7 +469,7 @@ body.ozz-cms[data-theme="dark"]{
       th {
         background: color(dark2);
         border-color: color(dark2);
-        color: rgba(color(light2), 0.5);
+        color: color(light2-50);
       }
       td {
         color: color(silver);
@@ -481,12 +484,12 @@ body.ozz-cms[data-theme="dark"]{
   .cms-global-search {
     .search-wrapper {
       input {
-        border-color: rgba(color(semi-blue), 0.3);
+        border-color: color(silver-20);
         color: color(light2);
       }
     }
     &__result-wrapper {
-      background: rgba(color(dark), 0.7);
+      background: color(dark-70);
     }
     &__result {
       background: color(dark1);

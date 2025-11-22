@@ -1,4 +1,6 @@
 // Listing type 1
+@use "./abstract/variables" as *;
+
 .listing-s1 {
   &__title {
     font-family: $rub;

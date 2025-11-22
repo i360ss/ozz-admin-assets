@@ -1,3 +1,5 @@
+@use "./abstract/variables" as *;
+
 @keyframes popup-anim {
   0% {
     opacity: 0;

@@ -1,3 +1,7 @@
+const DOMAIN_KEY = window.location.host.replace(/[^a-zA-Z0-9]/g, '_');
+const STORAGE_KEY = `ozz_app_state_${DOMAIN_KEY}`;
+
+// Default state
 let ozz_app_state = {
   nav_collapsed: false,
   block_editor_expanded: false,
@@ -8,32 +12,37 @@ let ozz_app_state = {
 };
 
 /**
- * Get State (Session storage)
- * @param {string} $key 
- * @returns value
+ * Get State
  */
-function GetState($key=false) {
-  const
-    hasItem = typeof sessionStorage !== 'undefined' && sessionStorage !== null && sessionStorage.getItem('ozz_app_state') !== null,
-    state = hasItem ? JSON.parse(sessionStorage.getItem('ozz_app_state')) : ozz_app_state;
+function GetState(key = false) {
+  const hasItem =
+    typeof localStorage !== 'undefined' &&
+    localStorage.getItem(STORAGE_KEY) !== null;
 
-  return $key ? state[$key] : state;
+  const state = hasItem
+    ? JSON.parse(localStorage.getItem(STORAGE_KEY))
+    : ozz_app_state;
+
+  return key ? state[key] : state;
 }
 
 /**
- * Set State (Session storage)
- * @param {string} $key
- * @param {*} $value
+ * Set State
  */
-function SetState($key, $value) {
-  const hasItem = typeof sessionStorage !== 'undefined' && sessionStorage !== null && sessionStorage.getItem('ozz_app_state') !== null;
-  const state = hasItem ? JSON.parse(sessionStorage.getItem('ozz_app_state')) : ozz_app_state;
+function SetState(key, value) {
+  const hasItem =
+    typeof localStorage !== 'undefined' &&
+    localStorage.getItem(STORAGE_KEY) !== null;
 
-  state[$key] = $value;
+  const state = hasItem
+    ? JSON.parse(localStorage.getItem(STORAGE_KEY))
+    : ozz_app_state;
+
+  state[key] = value;
   ozz_app_state = state;
 
-  if (typeof sessionStorage !== 'undefined' && sessionStorage !== null) {
-    sessionStorage.setItem('ozz_app_state', JSON.stringify(state));
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 }
 

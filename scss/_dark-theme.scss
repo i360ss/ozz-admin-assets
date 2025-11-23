@@ -323,6 +323,9 @@ body.ozz-cms[data-theme="dark"]{
       }
       .ozz-used-block {
         @include dark-skin-1;
+        &[data-expand="true"] {
+          border-color: color(primary-70);
+        }
         .ozz-block-accordion-bar {
           & > div h4 {
             color: color(semi-blue);

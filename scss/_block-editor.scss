@@ -192,10 +192,12 @@
       font-family: $rub-m;
       font-size: $font-small-3;
       color: color(primary);
+      padding: 20px;
     }
     .ozz-used-block {
       background: color(white);
       border-radius: $radius1;
+      border: 1px solid transparent;
       box-shadow: $shadow1;
       &:not(:last-child) {
         margin-bottom: 14px;
@@ -208,6 +210,12 @@
             }
           }
         }
+      }
+      &[data-expand="true"] {
+        border-color: color(primary-70);
+      }
+      &.sortable-ghost {
+        padding: 0;
       }
       .ozz-block-accordion-bar {
         display: grid;

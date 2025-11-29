@@ -4497,4 +4497,8 @@ body.ozz-cms.view-form-entry .entry-data .value {
   line-height: 1.5;
   font-size: 15px;
 }
+body.ozz-cms.view-create_entry .ozz-fm__submit-wrap input {
+  width: auto;
+  margin-right: auto;
+}
 /*# sourceMappingURL=admin.css.map */

@@ -1,8 +1,7 @@
 /* ----------FORM ----------- */
 @use "./abstract/variables" as *;
 
-.ozz-fm,
-.form {
+.ozz-fm {
   * {
     font-family: $rub;
     font-size: $font-normal;

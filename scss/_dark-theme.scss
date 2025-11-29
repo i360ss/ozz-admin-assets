@@ -249,7 +249,6 @@ body.ozz-cms[data-theme="dark"]{
             border-color: transparent;
           }
         }
-        .form,
         .ozz-fm {
           border: none;
         }
@@ -257,7 +256,6 @@ body.ozz-cms[data-theme="dark"]{
     }
   }
   // Forms
-  .form,
   .ozz-fm {
     select,
     textarea,
@@ -418,7 +416,6 @@ body.ozz-cms[data-theme="dark"]{
     &__pagination {
       border-top-color: transparent;
     }
-    .form,
     .ozz-fm {
       border: none;
       background: transparent;
@@ -441,7 +438,6 @@ body.ozz-cms[data-theme="dark"]{
         background-color: transparent;
         filter: brightness(5);
       }
-      .form,
       .ozz-fm {
         border: none;
         background: transparent;
@@ -456,7 +452,6 @@ body.ozz-cms[data-theme="dark"]{
         border-color: color(dark2);
       }
     }
-    .form,
     .ozz-fm {
       border: none;
     }

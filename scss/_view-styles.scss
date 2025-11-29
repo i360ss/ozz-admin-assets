@@ -12,7 +12,7 @@ body.ozz-cms {
       }
     }
   }
-  // Settings View
+  // Settings - View
   &.settings {
     .profile-image {
       border: 5px solid color(light1-10);
@@ -80,7 +80,7 @@ body.ozz-cms {
       }
     }
   }
-  // Forms view
+  // Forms - view
   &.view-form-entry {
     .post-edit-view__widget {
       width: 100%;
@@ -99,7 +99,7 @@ body.ozz-cms {
         .update-status {
           .ozz-fm__field {
             &:first-of-type {
-              width: 68%;
+              width: 100%;
               float: left;
               margin-right: 10px;
             }
@@ -107,6 +107,13 @@ body.ozz-cms {
               float: right;
               clear: both;
             }
+          }
+        }
+      }
+      &.delete-entry {
+        .ozz-fm__field {
+          &:last-of-type {
+            margin-bottom: 0;
           }
         }
       }

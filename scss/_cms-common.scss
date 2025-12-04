@@ -1,7 +1,7 @@
 @use "./abstract/variables" as *;
 
 .breadcrumb {
-  padding: 20px 0 10px;
+  padding: 20px 0;
   span {
     position: relative;
     margin-right: 16px;
@@ -29,7 +29,10 @@
   }
   + h1 {
     margin-top: 0;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
+    + p {
+      margin: 0 0 20px;
+    }
   }
 }
 a {

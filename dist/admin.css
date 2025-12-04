@@ -1791,7 +1791,7 @@ header .container ul li a {
   }
 }
 .breadcrumb {
-  padding: 20px 0 10px;
+  padding: 20px 0;
 }
 .breadcrumb span {
   position: relative;
@@ -1820,7 +1820,10 @@ header .container ul li a {
 }
 .breadcrumb + h1 {
   margin-top: 0;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
+}
+.breadcrumb + h1 + p {
+  margin: 0 0 20px;
 }
 
 a {
@@ -4497,8 +4500,23 @@ body.ozz-cms.view-form-entry .entry-data .value {
   line-height: 1.5;
   font-size: 15px;
 }
-body.ozz-cms.view-create_entry .ozz-fm__submit-wrap input {
+body.ozz-cms.view-create_entry .ozz-fm__submit-wrap input, body.ozz-cms.view-edit_entry .ozz-fm__submit-wrap input {
   width: auto;
   margin-right: auto;
+}
+body.ozz-cms.view-form-entries .action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+body.ozz-cms.view-form-entry .entry-data .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+body.ozz-cms.view-form-entry .entry-data .header h2 {
+  margin-bottom: 0;
 }
 /*# sourceMappingURL=admin.css.map */

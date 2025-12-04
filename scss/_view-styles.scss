@@ -135,12 +135,36 @@ body.ozz-cms {
       }
     }
   }
-  // Form - Create entry view
-  &.view-create_entry {
+  // Form - Create/edit entry view
+  &.view-create_entry,
+  &.view-edit_entry {
     .ozz-fm__submit-wrap {
       input {
         width: auto;
         margin-right: auto;
+      }
+    }
+  }
+  // Form entries - view
+  &.view-form-entries {
+    .action {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+  }
+  // Form entry
+  &.view-form-entry {
+    .entry-data {
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        h2 {
+          margin-bottom: 0;
+        }
       }
     }
   }

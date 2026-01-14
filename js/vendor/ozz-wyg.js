@@ -7,14 +7,24 @@
  */
 
 class OzzWyg {
+  // Static registry to track all editor instances
+  static instances = new Map();
+
   constructor(options) {
     this.options = { ...OzzWyg.defaults, ...options };
 
-    if (typeof this.options.selector === 'object') {
-      this.editors = [this.options.selector];
-    } else {
-      this.editors = document.querySelectorAll(this.options.selector).length > 0 ? document.querySelectorAll(this.options.selector) : false;
+    // Normalize selector: accept string, single DOM element, NodeList, or array of elements
+    let editorElements = [];
+    const selector = this.options.selector;
+    if (typeof selector === 'string') {
+      editorElements = document.querySelectorAll(selector);
+    } else if (selector instanceof Element) {
+      editorElements = [selector];
+    } else if (selector instanceof NodeList || Array.isArray(selector)) {
+      editorElements = selector;
     }
+
+    this.editors = editorElements.length > 0 ? editorElements : false;
 
     // Tools
     this.tools = {
@@ -139,14 +149,87 @@ class OzzWyg {
     };
 
     // Initiate Each Editors
+    this.editorInstances = new Map();
     if (this.editors) {
       this.editors.forEach(editor => {
-        this.editorID = `i-${this.randomId()}`;
-        editor.setAttribute('data-editor', this.editorID);
+        const editorID = `i-${this.randomId()}`;
+        editor.setAttribute('data-editor', editorID);
+
+        // Capture initial content before we overwrite the DOM
+        const initialContent =
+          (typeof this.options.value === 'string' ? this.options.value : null) ??
+          editor.getAttribute('data-value') ??
+          editor.innerHTML;
+
+        const instance = {
+          id: editorID,
+          element: editor,
+          playGround: null,
+          ozzWygInstance: this,
+          initialContent
+        };
+        this.editorInstances.set(editorID, instance);
+        this.currentEditorID = editorID;
         this.editor = editor;
+        this.editorID = editorID;
         this.initEditor();
+        instance.playGround = this.playGround;
+
+        // Apply initial content if provided
+        if (initialContent !== null && initialContent !== undefined && initialContent.trim() !== '') {
+          this.setValue(initialContent, editorID);
+        } else {
+          // Initialize features for any existing content in playground
+          setTimeout(() => {
+            // Ensure we're using the correct instance
+            const instancePlayGround = instance.playGround;
+            const instanceEditor = instance.element;
+            if (instancePlayGround) {
+              // Set context for initialization
+              const originalEditor = this.editor;
+              const originalPlayGround = this.playGround;
+              const originalEditorID = this.editorID;
+              
+              this.editor = instanceEditor;
+              this.playGround = instancePlayGround;
+              this.editorID = instance.id;
+              this.currentEditorID = instance.id;
+              
+              this.initializeContentFeatures();
+              
+              // Restore original context
+              this.editor = originalEditor;
+              this.playGround = originalPlayGround;
+              this.editorID = originalEditorID;
+            }
+          }, 0);
+        }
+        
+        // Register instance in static registry
+        OzzWyg.instances.set(editor, this);
+        OzzWyg.instances.set(editorID, this);
       });
     }
+  }
+
+  /**
+   * Set active editor context based on a child element (toolbar button / playground)
+   * @param {HTMLElement} element
+   * @returns {boolean} true if context updated
+   */
+  setActiveContextFromElement(element) {
+    if (!element) return false;
+    const editorEl = element.closest('.ozz-wyg');
+    if (!editorEl) return false;
+    const editorID = editorEl.getAttribute('data-editor');
+    const instance = this.editorInstances.get(editorID);
+    if (!instance) return false;
+
+    this.editor = instance.element;
+    this.playGround = instance.playGround;
+    this.editorID = editorID;
+    this.currentEditorID = editorID;
+    return true;
   }
 
   /**
@@ -157,32 +240,602 @@ class OzzWyg {
     this.editor.innerHTML = this.editorDOM();
     this.editor.querySelectorAll('button[data-action]').forEach(trigger => {
       trigger.addEventListener('click', (e) => {
+        this.setActiveContextFromElement(e.target);
         this.fireAction(e);
       });
     });
-    this.playGround = this.editor.querySelector('[data-editor-area]');
-
-    // Modify on input
-    this.playGround.addEventListener('input', () => {
-      // Modify tables
-      const tables = this.playGround.querySelectorAll('table');
-      tables.forEach((table) => {
-        // Wrap table
-        if (!table.closest('.ozz-wyg-table-wrapper')) {
-          const tableWrapped = document.createElement('div');
-          tableWrapped.classList.add('ozz-wyg-table-wrapper');
-          tableWrapped.innerHTML = table.outerHTML;
-          table.outerHTML = tableWrapped.outerHTML;
-        }
-
-        // Clear inline styles
-        table.removeAttribute('style');
-        const tItems = table.querySelectorAll('tbody, thead, tfoot, tr, td, th');
-        tItems.forEach(item => {
-          item.removeAttribute('style');
+    
+    // Initialize child tool dropdowns
+    this.editor.querySelectorAll('.ozz-wyg__tool-has-child').forEach(parent => {
+      const trigger = parent.querySelector('.more-tools-trigger');
+      const childMenu = parent.parentElement.querySelector('.ozz-wyg__tool-child');
+      if (trigger && childMenu) {
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          childMenu.classList.toggle('active');
         });
+      }
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.ozz-wyg__tool-has-child')) {
+        this.editor.querySelectorAll('.ozz-wyg__tool-child').forEach(menu => {
+          menu.classList.remove('active');
+        });
+      }
+    });
+    
+    this.playGround = this.editor.querySelector('[data-editor-area]');
+    
+    // Initialize event listeners
+    this.initEventListeners();
+  }
+
+  /**
+   * Initialize all event listeners for the editor
+   */
+  initEventListeners() {
+    // Input event - fires on content change
+    this.playGround.addEventListener('input', (e) => {
+      this.setActiveContextFromElement(this.playGround);
+      this.handleInput(e);
+    });
+
+    // Focus event - when editor gains focus
+    this.playGround.addEventListener('focus', (e) => {
+      this.setActiveContextFromElement(this.playGround);
+      this.emitEvent('focus', { editorID: this.editorID, event: e });
+      this.editor.classList.add('ozz-wyg--focused');
+    });
+
+    // Blur event - when editor loses focus
+    this.playGround.addEventListener('blur', (e) => {
+      this.setActiveContextFromElement(this.playGround);
+      this.emitEvent('blur', { editorID: this.editorID, event: e });
+      this.editor.classList.remove('ozz-wyg--focused');
+      this.emitEvent('change', { 
+        editorID: this.editorID, 
+        content: this.playGround.innerHTML,
+        event: e 
       });
     });
+
+    // Paste event - clean pasted content
+    this.playGround.addEventListener('paste', (e) => {
+      this.setActiveContextFromElement(this.playGround);
+      this.handlePaste(e);
+    });
+
+    // Keyboard shortcuts
+    this.playGround.addEventListener('keydown', (e) => {
+      this.setActiveContextFromElement(this.playGround);
+      this.handleKeydown(e);
+    });
+
+    // Selection change - update toolbar states
+    document.addEventListener('selectionchange', () => {
+      const selection = window.getSelection();
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const commonAncestor = range.commonAncestorContainer;
+        const node = commonAncestor.nodeType === 3 ? commonAncestor.parentElement : commonAncestor;
+        if (node) {
+          if (this.setActiveContextFromElement(node) && this.playGround.contains(node)) {
+            this.updateToolbarStates();
+          }
+        }
+      }
+    });
+
+    // Click event - update toolbar states when clicking in editor
+    this.playGround.addEventListener('click', () => {
+      this.setActiveContextFromElement(this.playGround);
+      setTimeout(() => this.updateToolbarStates(), 10);
+    });
+
+    // Mouseup event - update toolbar states after selection
+    this.playGround.addEventListener('mouseup', () => {
+      this.setActiveContextFromElement(this.playGround);
+      setTimeout(() => this.updateToolbarStates(), 10);
+    });
+
+    // Keyup event - update toolbar states after keyboard actions
+    this.playGround.addEventListener('keyup', () => {
+      this.setActiveContextFromElement(this.playGround);
+      setTimeout(() => this.updateToolbarStates(), 10);
+    });
+
+    // Keydown event - update toolbar states for arrow keys and other navigation
+    this.playGround.addEventListener('keydown', (e) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+        this.setActiveContextFromElement(this.playGround);
+        setTimeout(() => this.updateToolbarStates(), 10);
+      }
+    });
+  }
+
+  /**
+   * Handle input event
+   */
+  handleInput(e) {
+    // Modify tables
+    const tables = this.playGround.querySelectorAll('table');
+    tables.forEach((table) => {
+      // Wrap table
+      if (!table.closest('.ozz-wyg-table-wrapper')) {
+        const tableWrapped = document.createElement('div');
+        tableWrapped.classList.add('ozz-wyg-table-wrapper');
+        tableWrapped.innerHTML = table.outerHTML;
+        table.outerHTML = tableWrapped.outerHTML;
+      }
+
+      // Clear inline styles
+      table.removeAttribute('style');
+      const tItems = table.querySelectorAll('tbody, thead, tfoot, tr, td, th');
+      tItems.forEach(item => {
+        item.removeAttribute('style');
+      });
+    });
+
+    // Emit custom input event
+    this.emitEvent('input', { 
+      editorID: this.editorID, 
+      content: this.playGround.innerHTML,
+      event: e 
+    });
+  }
+
+  /**
+   * Handle paste event - clean pasted content
+   */
+  handlePaste(e) {
+    e.preventDefault();
+    
+    // Get pasted content
+    const clipboardData = e.clipboardData || window.clipboardData;
+    const htmlData = clipboardData.getData('text/html');
+    const textData = clipboardData.getData('text/plain');
+    const pastedData = htmlData || textData;
+    
+    // Clean the pasted content
+    const cleanedContent = this.cleanPastedContent(pastedData);
+    
+    try {
+      // Insert cleaned content
+      const selection = window.getSelection();
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        
+        // Ensure range is within this editor; otherwise collapse to end of playground
+        const containerNode = range.commonAncestorContainer.nodeType === 3
+          ? range.commonAncestorContainer.parentElement
+          : range.commonAncestorContainer;
+        if (!containerNode || !this.playGround.contains(containerNode)) {
+          range.selectNodeContents(this.playGround);
+          range.collapse(false);
+        }
+
+        // Delete selected content
+        range.deleteContents();
+        
+        // Insert cleaned content
+        if (cleanedContent) {
+          if (htmlData && cleanedContent.includes('<')) {
+            // Treat as HTML: parse into a temp container and move children into a fragment
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = cleanedContent;
+            const fragment = document.createDocumentFragment();
+            while (tempDiv.firstChild) {
+              fragment.appendChild(tempDiv.firstChild);
+            }
+            range.insertNode(fragment);
+
+            // Move cursor to end of inserted content
+            const lastChild = this.playGround.lastChild;
+            if (lastChild) {
+              range.setStartAfter(lastChild);
+            }
+          } else {
+            // Plain text
+            const textNode = document.createTextNode(cleanedContent);
+            range.insertNode(textNode);
+            range.setStartAfter(textNode);
+          }
+          range.collapse(true);
+          
+          // Update selection
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      } else {
+        // No selection, insert at end of playground
+        const range = document.createRange();
+        range.selectNodeContents(this.playGround);
+        range.collapse(false);
+        
+        if (cleanedContent) {
+          if (htmlData && cleanedContent.includes('<')) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = cleanedContent;
+            const fragment = document.createDocumentFragment();
+            while (tempDiv.firstChild) {
+              fragment.appendChild(tempDiv.firstChild);
+            }
+            range.insertNode(fragment);
+          } else {
+            const textNode = document.createTextNode(cleanedContent);
+            range.insertNode(textNode);
+          }
+        }
+      }
+    } catch (err) {
+      // Fallback: let the browser handle it if our manual insertion fails
+      if (cleanedContent) {
+        document.execCommand('insertHTML', false, cleanedContent);
+      }
+    }
+
+    // Emit paste event
+    this.emitEvent('paste', { 
+      editorID: this.editorID, 
+      originalContent: pastedData,
+      cleanedContent: cleanedContent,
+      event: e 
+    });
+
+    // Trigger input event manually
+    this.playGround.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  /**
+   * Clean pasted content - remove unwanted styles and tags
+   */
+  cleanPastedContent(content) {
+    // Create temporary div to parse HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+
+    // Remove unwanted attributes
+    const unwantedAttributes = ['style', 'class', 'id', 'width', 'height', 'border'];
+    const allElements = tempDiv.querySelectorAll('*');
+    allElements.forEach(el => {
+      unwantedAttributes.forEach(attr => {
+        el.removeAttribute(attr);
+      });
+    });
+
+    // Remove script and style tags
+    const scripts = tempDiv.querySelectorAll('script, style');
+    scripts.forEach(el => el.remove());
+
+    // Clean up empty elements
+    const emptyElements = tempDiv.querySelectorAll('p:empty, div:empty, span:empty');
+    emptyElements.forEach(el => {
+      if (el.textContent.trim() === '') {
+        el.remove();
+      }
+    });
+
+    return tempDiv.innerHTML || tempDiv.textContent;
+  }
+
+  /**
+   * Handle keyboard shortcuts
+   */
+  handleKeydown(e) {
+    // Ctrl/Cmd + B - Bold
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+      e.preventDefault();
+      this.exeCMD('bold');
+      this.updateToolbarStates();
+      return;
+    }
+
+    // Ctrl/Cmd + I - Italic
+    if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+      e.preventDefault();
+      this.exeCMD('italic');
+      this.updateToolbarStates();
+      return;
+    }
+
+    // Ctrl/Cmd + U - Underline
+    if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+      e.preventDefault();
+      this.exeCMD('underline');
+      this.updateToolbarStates();
+      return;
+    }
+
+    // Ctrl/Cmd + K - Link
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      const linkBtn = this.editor.querySelector('button[data-action="link"]');
+      if (linkBtn) linkBtn.click();
+      return;
+    }
+
+    // Ctrl/Cmd + Z - Undo
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      // Allow default undo behavior
+      setTimeout(() => this.updateToolbarStates(), 10);
+      return;
+    }
+
+    // Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y - Redo
+    if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') || 
+        ((e.ctrlKey || e.metaKey) && e.key === 'y')) {
+      // Allow default redo behavior
+      setTimeout(() => this.updateToolbarStates(), 10);
+      return;
+    }
+
+    // Emit keydown event
+    this.emitEvent('keydown', { 
+      editorID: this.editorID, 
+      key: e.key,
+      ctrlKey: e.ctrlKey,
+      metaKey: e.metaKey,
+      shiftKey: e.shiftKey,
+      event: e 
+    });
+  }
+
+  /**
+   * Update toolbar button states based on current selection
+   */
+  updateToolbarStates() {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) {
+      // Clear all active states if no selection
+      this.clearAllToolbarStates();
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const commonAncestor = range.commonAncestorContainer;
+    
+    // Check if selection is within this editor
+    const node = commonAncestor.nodeType === 3 ? commonAncestor.parentElement : commonAncestor;
+    if (!node || !this.playGround.contains(node)) {
+      this.clearAllToolbarStates();
+      return;
+    }
+
+    // Store current focus to restore later
+    const wasFocused = document.activeElement === this.playGround;
+    
+    // Temporarily focus playground for queryCommandState to work correctly
+    if (!wasFocused) {
+      this.playGround.focus();
+    }
+
+    // Update bold button
+    const boldBtn = this.editor.querySelector('button[data-action="bold"]');
+    if (boldBtn) {
+      try {
+        const isBold = document.queryCommandState('bold');
+        boldBtn.classList.toggle('active', isBold);
+      } catch (e) {
+        // Fallback: check if parent is strong or b tag
+        const parent = this.getParentTag(range, ['strong', 'b']);
+        boldBtn.classList.toggle('active', !!parent);
+      }
+    }
+
+    // Update italic button
+    const italicBtn = this.editor.querySelector('button[data-action="italic"]');
+    if (italicBtn) {
+      try {
+        const isItalic = document.queryCommandState('italic');
+        italicBtn.classList.toggle('active', isItalic);
+      } catch (e) {
+        const parent = this.getParentTag(range, ['em', 'i']);
+        italicBtn.classList.toggle('active', !!parent);
+      }
+    }
+
+    // Update underline button
+    const underlineBtn = this.editor.querySelector('button[data-action="underline"]');
+    if (underlineBtn) {
+      try {
+        const isUnderline = document.queryCommandState('underline');
+        underlineBtn.classList.toggle('active', isUnderline);
+      } catch (e) {
+        const parent = this.getParentTag(range, ['u']);
+        underlineBtn.classList.toggle('active', !!parent);
+      }
+    }
+
+    // Update strikethrough button
+    const strikeBtn = this.editor.querySelector('button[data-action="strikethrough"]');
+    if (strikeBtn) {
+      try {
+        const isStrike = document.queryCommandState('strikethrough');
+        strikeBtn.classList.toggle('active', isStrike);
+      } catch (e) {
+        const parent = this.getParentTag(range, ['s', 'strike', 'del']);
+        strikeBtn.classList.toggle('active', !!parent);
+      }
+    }
+
+    // Update subscript button
+    const subBtn = this.editor.querySelector('button[data-action="subscript"]');
+    if (subBtn) {
+      try {
+        const isSub = document.queryCommandState('subscript');
+        subBtn.classList.toggle('active', isSub);
+      } catch (e) {
+        const parent = this.getParentTag(range, ['sub']);
+        subBtn.classList.toggle('active', !!parent);
+      }
+    }
+
+    // Update superscript button
+    const supBtn = this.editor.querySelector('button[data-action="superscript"]');
+    if (supBtn) {
+      try {
+        const isSup = document.queryCommandState('superscript');
+        supBtn.classList.toggle('active', isSup);
+      } catch (e) {
+        const parent = this.getParentTag(range, ['sup']);
+        supBtn.classList.toggle('active', !!parent);
+      }
+    }
+
+    // Update format block (headings, paragraph)
+    this.updateFormatBlockState(range);
+
+    // Update list buttons
+    const olBtn = this.editor.querySelector('button[data-action="insertOrderedList"]');
+    if (olBtn) {
+      try {
+        const isOL = document.queryCommandState('insertOrderedList');
+        olBtn.classList.toggle('active', isOL);
+      } catch (e) {
+        const parent = this.getParentTag(range, ['ol']);
+        olBtn.classList.toggle('active', !!parent);
+      }
+    }
+
+    const ulBtn = this.editor.querySelector('button[data-action="insertUnorderedList"]');
+    if (ulBtn) {
+      try {
+        const isUL = document.queryCommandState('insertUnorderedList');
+        ulBtn.classList.toggle('active', isUL);
+      } catch (e) {
+        const parent = this.getParentTag(range, ['ul']);
+        ulBtn.classList.toggle('active', !!parent);
+      }
+    }
+
+    // Update alignment buttons
+    const alignLeftBtn = this.editor.querySelector('button[data-action="justifyLeft"]');
+    if (alignLeftBtn) {
+      try {
+        const isLeft = document.queryCommandState('justifyLeft');
+        alignLeftBtn.classList.toggle('active', isLeft);
+      } catch (e) {
+        alignLeftBtn.classList.remove('active');
+      }
+    }
+
+    const alignCenterBtn = this.editor.querySelector('button[data-action="justifyCenter"]');
+    if (alignCenterBtn) {
+      try {
+        const isCenter = document.queryCommandState('justifyCenter');
+        alignCenterBtn.classList.toggle('active', isCenter);
+      } catch (e) {
+        alignCenterBtn.classList.remove('active');
+      }
+    }
+
+    const alignRightBtn = this.editor.querySelector('button[data-action="justifyRight"]');
+    if (alignRightBtn) {
+      try {
+        const isRight = document.queryCommandState('justifyRight');
+        alignRightBtn.classList.toggle('active', isRight);
+      } catch (e) {
+        alignRightBtn.classList.remove('active');
+      }
+    }
+
+    const justifyBtn = this.editor.querySelector('button[data-action="justifyFull"]');
+    if (justifyBtn) {
+      try {
+        const isJustify = document.queryCommandState('justifyFull');
+        justifyBtn.classList.toggle('active', isJustify);
+      } catch (e) {
+        justifyBtn.classList.remove('active');
+      }
+    }
+  }
+
+  /**
+   * Get parent element with specific tag names
+   */
+  getParentTag(range, tagNames) {
+    let node = range.commonAncestorContainer;
+    if (node.nodeType === 3) {
+      node = node.parentElement;
+    }
+    
+    while (node && node !== this.playGround) {
+      if (node.nodeType === 1 && tagNames.includes(node.tagName.toLowerCase())) {
+        return node;
+      }
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  /**
+   * Update format block state (headings, paragraph)
+   */
+  updateFormatBlockState(range) {
+    let node = range.commonAncestorContainer;
+    if (node.nodeType === 3) {
+      node = node.parentElement;
+    }
+    
+    // Find the block-level element
+    let blockTag = null;
+    while (node && node !== this.playGround) {
+      if (node.nodeType === 1) {
+        const tagName = node.tagName.toLowerCase();
+        if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'blockquote', 'pre', 'code', 'div'].includes(tagName)) {
+          blockTag = tagName;
+          break;
+        }
+      }
+      node = node.parentElement;
+    }
+    
+    // Update heading/format buttons
+    const headingBtns = this.editor.querySelectorAll('button[data-action="formatBlock"]');
+    headingBtns.forEach(btn => {
+      const value = btn.getAttribute('data-value');
+      if (value) {
+        const valueLower = value.toLowerCase();
+        // Handle paragraph - can be 'p' or 'P'
+        if (valueLower === 'p' && (blockTag === 'p' || blockTag === 'div' || !blockTag)) {
+          btn.classList.toggle('active', true);
+        } else if (valueLower === blockTag) {
+          btn.classList.toggle('active', true);
+        } else {
+          btn.classList.remove('active');
+        }
+      }
+    });
+  }
+
+  /**
+   * Clear all toolbar button active states
+   */
+  clearAllToolbarStates() {
+    const allButtons = this.editor.querySelectorAll('button[data-action]');
+    allButtons.forEach(btn => btn.classList.remove('active'));
+  }
+
+  /**
+   * Emit custom event
+   */
+  emitEvent(eventName, data = {}) {
+    const event = new CustomEvent(`ozzwyg:${eventName}`, {
+      detail: {
+        editorID: this.editorID,
+        editor: this.editor,
+        playGround: this.playGround,
+        ...data
+      },
+      bubbles: true,
+      cancelable: true
+    });
+    
+    // Dispatch on both the editor element and the playground
+    this.editor.dispatchEvent(event);
+    this.playGround.dispatchEvent(event);
   }
 
   /**
@@ -216,20 +869,9 @@ class OzzWyg {
     });
 
     this.toolbar = `<div class="ozz-wyg__toolbar">${toolsDOM}</div>`;
+    this.editableArea = `<div class="ozz-wyg__editor-area" data-editor-area contenteditable="true"></div>`;
 
-    // Editor Area
-    this.editableArea = document.createElement('div');
-    this.editableArea.setAttribute('data-editor-area', true);
-    this.editableArea.setAttribute('contenteditable', true);
-    this.editableArea.classList.add('ozz-wyg__editor-area');
-
-    const existingEditorArea = this.editor.querySelector('[data-editor-area]');
-    if (existingEditorArea) {
-      const innerContent = existingEditorArea.innerHTML;
-      this.editableArea.innerHTML = innerContent;
-    }
-
-    return this.toolbar + this.editableArea.outerHTML;
+    return this.toolbar + this.editableArea;
   }
 
   /**
@@ -300,6 +942,9 @@ class OzzWyg {
     } else {
       this.exeCMD(action, value);
     }
+
+    // Update toolbar states after action
+    setTimeout(() => this.updateToolbarStates(), 10);
   }
 
   /**
@@ -307,9 +952,14 @@ class OzzWyg {
    */
   linkPopUp(ev) {
     const linkCls = 'ozz-wyg__tool-link-',
-      parent = ev.target.closest(`.${linkCls}trigger`),
-      settingsDOM = parent.querySelector(`.${linkCls}setting`),
-      selection = window.getSelection();
+      parent = ev.target.closest(`.${linkCls}trigger`);
+    
+    if (!parent) return;
+    
+    const settingsDOM = parent.querySelector(`.${linkCls}setting`);
+    if (!settingsDOM) return;
+    
+    const selection = window.getSelection();
 
     // Store selection
     let sRange = false;
@@ -319,13 +969,21 @@ class OzzWyg {
     }
 
     // Check if there's an existing anchor link
-    const existingAnchor = selection.anchorNode?.parentElement.tagName === 'A' ? selection.anchorNode.parentElement : null,
-      existingURL = existingAnchor ? existingAnchor.href : '',
-      existingTarget = existingAnchor ? existingAnchor.target : '';
+    let existingAnchor = null;
+    if (selection.anchorNode) {
+      const parent = selection.anchorNode.parentElement;
+      if (parent && parent.tagName === 'A') {
+        existingAnchor = parent;
+      } else if (parent && parent.closest('a')) {
+        existingAnchor = parent.closest('a');
+      }
+    }
+    const existingURL = existingAnchor ? existingAnchor.href : '';
+    const existingTarget = existingAnchor ? existingAnchor.target : '';
 
     settingsDOM.innerHTML = `
-      <label>URL:</label> <input form="" type="text" id="url-${this.editorID}" value="${existingURL}"><br>
-      <label>Target:</label> <input form="" type="text" id="target-${this.editorID}" value="${existingTarget ? existingTarget : '_blank'}"><br>
+      <label>URL:</label> <input type="text" id="url-${this.editorID}" value="${existingURL}"><br>
+      <label>Target:</label> <input type="text" id="target-${this.editorID}" value="${existingTarget ? existingTarget : '_blank'}"><br>
       <button type="button" class="ozz-wyg-regular-btn" id="insertLinkTrigger-${this.editorID}">${existingAnchor ? 'Update' : 'Insert'}</button>`;
     settingsDOM.classList.toggle('active');
 
@@ -336,12 +994,17 @@ class OzzWyg {
       const targetInput = settingsDOM.querySelector('#target-' + this.editorID).value;
 
       if (urlInput && targetInput) {
-        const anchor = existingAnchor || document.createElement('a');
-        anchor.href = urlInput;
-        anchor.target = targetInput;
-        anchor.textContent = existingAnchor ? existingAnchor.textContent : selectionStr;
-
-        if (!existingAnchor) {
+        if (existingAnchor) {
+          // Update existing anchor
+          existingAnchor.href = urlInput;
+          existingAnchor.target = targetInput;
+        } else {
+          // Create new anchor
+          const anchor = document.createElement('a');
+          anchor.href = urlInput;
+          anchor.target = targetInput;
+          anchor.textContent = selectionStr || urlInput;
+          
           if (sRange) {
             selection.removeAllRanges();
             selection.addRange(sRange);
@@ -367,8 +1030,16 @@ class OzzWyg {
    */
   linkPopOver() {
     this.playGround.querySelectorAll('a').forEach(anchor => {
+      // Only add listeners if not already added
+      if (anchor.hasAttribute('data-link-handled')) {
+        return;
+      }
+      anchor.setAttribute('data-link-handled', 'true');
+      
       anchor.addEventListener('click', (e) => {
         if (anchor.getAttribute('role') !== 'popover') {
+          e.preventDefault();
+          e.stopPropagation();
           const popoverDOM = document.createElement('span');
           popoverDOM.setAttribute('contenteditable', false);
           popoverDOM.classList.add('ozz-wyg-popover');
@@ -422,11 +1093,15 @@ class OzzWyg {
    * Table Popup
    */
   tablePopUp(ev) {
-    const
-      tableCls = 'ozz-wyg__tool-table-',
-      parent = ev.target.closest(`.${tableCls}trigger`),
-      settingsDOM = parent.querySelector(`.${tableCls}setting`),
-      selection = window.getSelection();
+    const tableCls = 'ozz-wyg__tool-table-',
+      parent = ev.target.closest(`.${tableCls}trigger`);
+    
+    if (!parent) return;
+    
+    const settingsDOM = parent.querySelector(`.${tableCls}setting`);
+    if (!settingsDOM) return;
+    
+    const selection = window.getSelection();
 
     // Store selection
     let sRange = false;
@@ -435,15 +1110,15 @@ class OzzWyg {
     }
 
     settingsDOM.innerHTML = `
-      <input form="" type="number" min="1" max="100" value="2" placeholder="X" id="row-${this.editorID}">
-      <input form="" type="number" min="1" max="100" value="2" placeholder="Y" id="column-${this.editorID}">
+      <input type="number" min="1" max="100" value="2" placeholder="X" id="row-${this.editorID}">
+      <input type="number" min="1" max="100" value="2" placeholder="Y" id="column-${this.editorID}">
       <span class="sub-options">
         <span>
-          <input form="" type="checkbox" id="has-th-${this.editorID}">
-          <label for="has-th-${this.editorID}"">No Header</label>
+          <input type="checkbox" id="has-th-${this.editorID}">
+          <label for="has-th-${this.editorID}">No Header</label>
         </span>
         <span>
-          <input form="" type="checkbox" id="has-footer-${this.editorID}">
+          <input type="checkbox" id="has-footer-${this.editorID}">
           <label for="has-footer-${this.editorID}">No Footer</label>
         </span>
       </span>
@@ -476,8 +1151,8 @@ class OzzWyg {
       const tBody = table.createTBody();
       for (let i = 0; i < rows; i++) {
         const tRows = tBody.insertRow(i);
-        for (let i = 0; i < columns; i++) {
-          tRows.insertCell(i);
+        for (let j = 0; j < columns; j++) {
+          tRows.insertCell(j);
         }
       }
 
@@ -516,8 +1191,14 @@ class OzzWyg {
    * Table actions
    */
   tableActions() {
-    const $table = document.querySelectorAll('.ozz-wyg-table-wrapper');
+    const $table = this.playGround.querySelectorAll('.ozz-wyg-table-wrapper');
     $table.forEach(tbl => {
+      // Only add listeners if not already added
+      if (tbl.hasAttribute('data-table-handled')) {
+        return;
+      }
+      tbl.setAttribute('data-table-handled', 'true');
+      
       tbl.addEventListener('mouseover', () => {
         let tblTools = tbl.querySelectorAll('.ozz-wyg-table-actions');
         if (tblTools.length === 0) {
@@ -538,6 +1219,7 @@ class OzzWyg {
           actions.querySelectorAll('button').forEach(btn => {
             btn.addEventListener('click', (e) => {
               e.preventDefault();
+              e.stopPropagation();
               const action = e.target.getAttribute('data-tbl-action');
               switch (action) {
                 case 'addrow':
@@ -559,10 +1241,13 @@ class OzzWyg {
           });
           tbl.appendChild(actions);
         }
+      });
 
-        tbl.addEventListener('mouseleave', () => {
-          tblTools[0] ? tblTools[0].remove() : false;
-        });
+      tbl.addEventListener('mouseleave', () => {
+        const tblTools = tbl.querySelectorAll('.ozz-wyg-table-actions');
+        if (tblTools.length > 0) {
+          tblTools[0].remove();
+        }
       });
     });
   }
@@ -572,9 +1257,11 @@ class OzzWyg {
    * @param table_wrap
    */
   addTableRow(table_wrap) {
+    if (!table_wrap) return;
     const tbody = table_wrap.querySelector('tbody');
     if (tbody) {
-      const cellsCount = tbody.querySelector('tr')?.querySelectorAll('td')?.length ?? 1;
+      const firstRow = tbody.querySelector('tr');
+      const cellsCount = firstRow ? firstRow.querySelectorAll('td, th').length : 1;
       const newRow = tbody.insertRow(-1);
       for (let i = 0; i < cellsCount; i++) {
         const td = document.createElement('td');
@@ -589,7 +1276,10 @@ class OzzWyg {
    * @param table_wrap
    */
   deleteTableRow(table_wrap) {
-    const tbody = table_wrap.querySelector('table tbody');
+    if (!table_wrap) return;
+    const table = table_wrap.querySelector('table');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
     if (tbody && tbody.rows.length > 1) {
       tbody.deleteRow(-1);
     }
@@ -600,34 +1290,49 @@ class OzzWyg {
    * @param table_wrap
    */
   addTableCol(table_wrap) {
+    if (!table_wrap) return;
     const thead = table_wrap.querySelector('thead');
     const tbody = table_wrap.querySelector('tbody');
     const tfoot = table_wrap.querySelector('tfoot');
 
     const addCellToRows = (rows, newCellIndex, type='td') => {
+      if (!rows || rows.length === 0) return;
       rows.forEach((row) => {
         const td = document.createElement(type);
         td.innerHTML = '<br>';
-        row.insertBefore(td, row.cells[newCellIndex]);
+        if (newCellIndex < row.cells.length) {
+          row.insertBefore(td, row.cells[newCellIndex]);
+        } else {
+          row.appendChild(td);
+        }
       });
     }
 
     if (thead) {
       const headerRows = thead.querySelectorAll('tr');
-      const newCellIndex = headerRows[0]?.querySelectorAll('th, td')?.length ?? 0;
-      addCellToRows(headerRows, newCellIndex, 'th');
+      if (headerRows.length > 0) {
+        const firstRow = headerRows[0];
+        const newCellIndex = firstRow ? firstRow.querySelectorAll('th, td').length : 0;
+        addCellToRows(headerRows, newCellIndex, 'th');
+      }
     }
 
     if (tbody) {
       const bodyRows = tbody.querySelectorAll('tr');
-      const newCellIndex = bodyRows[0]?.querySelectorAll('td')?.length ?? 0;
-      addCellToRows(bodyRows, newCellIndex);
+      if (bodyRows.length > 0) {
+        const firstRow = bodyRows[0];
+        const newCellIndex = firstRow ? firstRow.querySelectorAll('td').length : 0;
+        addCellToRows(bodyRows, newCellIndex);
+      }
     }
 
     if (tfoot) {
       const footerRows = tfoot.querySelectorAll('tr');
-      const newCellIndex = footerRows[0]?.querySelectorAll('td')?.length ?? 0;
-      addCellToRows(footerRows, newCellIndex);
+      if (footerRows.length > 0) {
+        const firstRow = footerRows[0];
+        const newCellIndex = firstRow ? firstRow.querySelectorAll('td').length : 0;
+        addCellToRows(footerRows, newCellIndex);
+      }
     }
   }
 
@@ -636,15 +1341,21 @@ class OzzWyg {
    * @param table_wrap
    */
   deleteTableCol(table_wrap) {
+    if (!table_wrap) return;
     const thead = table_wrap.querySelector('thead');
     const tbody = table_wrap.querySelector('tbody');
     const tfoot = table_wrap.querySelector('tfoot');
 
     const deleteLastCell = (rows) => {
-      const lastCellIndex = rows[0]?.cells.length - 1;
-      if (lastCellIndex > 0) {
+      if (!rows || rows.length === 0) return;
+      const firstRow = rows[0];
+      if (!firstRow) return;
+      const lastCellIndex = firstRow.cells.length - 1;
+      if (lastCellIndex >= 0) {
         rows.forEach((row) => {
-          row.deleteCell(lastCellIndex);
+          if (row.cells.length > 1) {
+            row.deleteCell(lastCellIndex);
+          }
         });
       }
     }
@@ -667,9 +1378,14 @@ class OzzWyg {
    */
   mediaPopUp(ev) {
     const linkCls = 'ozz-wyg__tool-media-',
-      parent = ev.target.closest(`.${linkCls}trigger`),
-      settingsDOM = parent.querySelector(`.${linkCls}setting`),
-      selection = window.getSelection();
+      parent = ev.target.closest(`.${linkCls}trigger`);
+    
+    if (!parent) return;
+    
+    const settingsDOM = parent.querySelector(`.${linkCls}setting`);
+    if (!settingsDOM) return;
+    
+    const selection = window.getSelection();
 
     // Store selection
     let sRange = false;
@@ -682,9 +1398,9 @@ class OzzWyg {
     let existingALT = '';
 
     settingsDOM.innerHTML = `
-      <label>Upload:</label> <input form="" type="file" accept="image/*,video/*" id="file-${this.editorID}" value="${existingURL}"><br>
-      <label>Media URL:</label> <input form="" type="text" id="url-${this.editorID}" value="${existingURL}"><br>
-      <label>Alt:</label> <input form="" type="text" id="alt-${this.editorID}" value="${existingALT}"><br>
+      <label>Upload:</label> <input type="file" accept="image/*,video/*" id="file-${this.editorID}"><br>
+      <label>Media URL:</label> <input type="text" id="url-${this.editorID}" value="${existingURL}"><br>
+      <label>Alt:</label> <input type="text" id="alt-${this.editorID}" value="${existingALT}"><br>
       <button type="button" class="ozz-wyg-regular-btn" id="insertMediaTrigger-${this.editorID}">${existingURL ? 'Update' : 'Insert'}</button>`;
     settingsDOM.classList.toggle('active');
 
@@ -773,8 +1489,14 @@ class OzzWyg {
    * Media Popover
    */
   mediaPopover() {
-    const mediaItems = this.editor.querySelectorAll('img, .media-wrapper');
+    // Use event delegation to prevent duplicate listeners
+    const mediaItems = this.playGround.querySelectorAll('img, .media-wrapper');
     mediaItems.forEach(mediaItem => {
+      // Remove existing click handlers by cloning
+      if (mediaItem.hasAttribute('data-media-handled')) {
+        return;
+      }
+      mediaItem.setAttribute('data-media-handled', 'true');
       mediaItem.addEventListener('click', (e) => {
         const popoverDOM = document.createElement('div');
         popoverDOM.setAttribute('contenteditable', false);
@@ -797,43 +1519,63 @@ class OzzWyg {
           <button type="button" title="Align Center" data-media-action="align-center">Align Center</button>
           <button type="button" title="Align Right" data-media-action="align-right">Align Right</button>
           <button type="button" title="Inline" data-media-action="inline">Inline</button>
-          <select form="" data-media-action="width">${options}</select>
+          <select data-media-action="width">${options}</select>
           <button type="button" title="Delete" data-media-action="delete">Delete</button>
         `;
 
-        if (this.editor.querySelectorAll('.ozz-wyg-media-actions').length === 0) {
-          mediaItem.insertAdjacentElement('afterend', popoverDOM);
-
-          // Position popover element
-          popoverDOM.style.top = `${e.clientY}px`;
-          popoverDOM.style.left = `${e.clientX}px`;
-
-          // Media Actions
-          popoverDOM.querySelectorAll('button, select').forEach(actionTrigger => {
-            if (actionTrigger.tagName === 'SELECT') {
-              actionTrigger.addEventListener('change', () => {
-                const action = actionTrigger.value;
-                mediaItem.classList.remove(...Array.from(mediaItem.classList).filter(className => className.startsWith('w-')));
-                if (action !== 'auto') {
-                  mediaItem.classList.add(action);
-                }
-              });
-            } else {
-              actionTrigger.addEventListener('click', () => {
-                const action = actionTrigger.getAttribute('data-media-action');
-                if (action == 'align-left' || action == 'align-right' || action == 'align-center') {
-                  mediaItem.classList.remove(...Array.from(mediaItem.classList).filter(className => className.startsWith('align-')));
-                  mediaItem.classList.add(action);
-                } else if (action == 'inline') {
-                  mediaItem.classList.toggle(action);
-                } else if (action == 'delete') {
-                  mediaItem.remove();
-                  popoverDOM.remove();
-                }
-              });
-            }
-          });
+        // Remove any existing popover first
+        const existingPopover = this.editor.querySelector('.ozz-wyg-media-actions');
+        if (existingPopover) {
+          existingPopover.remove();
         }
+        
+        mediaItem.insertAdjacentElement('afterend', popoverDOM);
+
+        // Position popover element at the click point
+        // Get the editor's position relative to viewport
+        const editorRect = this.editor.getBoundingClientRect();
+        
+        // Calculate position relative to editor container
+        const relativeX = e.clientX - editorRect.left;
+        const relativeY = e.clientY - editorRect.top;
+        
+        // Ensure editor has relative positioning for absolute children
+        const editorPosition = window.getComputedStyle(this.editor).position;
+        if (editorPosition === 'static') {
+          this.editor.style.position = 'relative';
+        }
+        
+        // Set position relative to editor (not absolute screen coordinates)
+        popoverDOM.style.position = 'absolute';
+        popoverDOM.style.top = `${relativeY}px`;
+        popoverDOM.style.left = `${relativeX}px`;
+        popoverDOM.style.zIndex = '1000';
+
+        // Media Actions
+        popoverDOM.querySelectorAll('button, select').forEach(actionTrigger => {
+          if (actionTrigger.tagName === 'SELECT') {
+            actionTrigger.addEventListener('change', () => {
+              const action = actionTrigger.value;
+              mediaItem.classList.remove(...Array.from(mediaItem.classList).filter(className => className.startsWith('w-')));
+              if (action !== 'auto') {
+                mediaItem.classList.add(action);
+              }
+            });
+          } else {
+            actionTrigger.addEventListener('click', () => {
+              const action = actionTrigger.getAttribute('data-media-action');
+              if (action == 'align-left' || action == 'align-right' || action == 'align-center') {
+                mediaItem.classList.remove(...Array.from(mediaItem.classList).filter(className => className.startsWith('align-')));
+                mediaItem.classList.add(action);
+              } else if (action == 'inline') {
+                mediaItem.classList.toggle(action);
+              } else if (action == 'delete') {
+                mediaItem.remove();
+                popoverDOM.remove();
+              }
+            });
+          }
+        });
 
         // Close popover
         const tempCloseEvent = (ev) => {
@@ -879,7 +1621,7 @@ class OzzWyg {
    */
   getYouTubeEmbedCode(url) {
     const videoID = this.extractYouTubeVideoID(url);
-    return `<div class="media-wrapper"><span class="height-holder"></span><iframe src="https://www.youtube.com/embed/${videoID}" frameborder="0" allowfullscreen></iframe><div>`;
+    return `<div class="media-wrapper"><span class="height-holder"></span><iframe src="https://www.youtube.com/embed/${videoID}" frameborder="0" allowfullscreen></iframe></div>`;
   }
 
   /**
@@ -927,9 +1669,9 @@ class OzzWyg {
    * Quote Text
    */
   quoteText() {
-    const
-      selection = window.getSelection(),
-      quote = '<blockquote><p>' + ((selection.toString() == '') ? '<br>' : selection.toString()) + 
+    const selection = window.getSelection();
+    const selectedText = selection.toString().trim();
+    const quote = '<blockquote><p>' + (selectedText === '' ? '<br>' : selectedText) + 
       '</p><footer class="blockquote-footer">--Footer, <cite>cite</cite></footer></blockquote><br>';
 
     document.execCommand('insertHTML', false, quote);
@@ -939,11 +1681,15 @@ class OzzWyg {
    * Add Code
    */
   codeText() {
-    const
-      selection = window.getSelection(),
-      code = '<code>' + selection.toString() + '</code>';
-
-    document.execCommand('insertHTML', false, code);
+    const selection = window.getSelection();
+    const selectedText = selection.toString();
+    if (selectedText === '') {
+      // If no selection, insert empty code tag
+      document.execCommand('insertHTML', false, '<code></code>');
+    } else {
+      const code = '<code>' + selectedText + '</code>';
+      document.execCommand('insertHTML', false, code);
+    }
   }
 
   /**
@@ -952,9 +1698,13 @@ class OzzWyg {
   toggleCodeView() {
     if (this.isHTML()) {
       this.playGround.classList.remove('ozz-wyg-html-view');
-      this.playGround.innerHTML = this.playGround.textContent;
-      this.tableActions(); // Init table Actions
-      this.mediaPopover(); // Config Media Popover
+      // Parse HTML from text content
+      const htmlContent = this.playGround.textContent;
+      this.playGround.innerHTML = htmlContent;
+      // Re-initialize all interactive features after switching back to visual view
+      setTimeout(() => {
+        this.initializeContentFeatures();
+      }, 0);
     } else {
       this.playGround.querySelectorAll('[contenteditable="false"]').forEach(element => {
         element.remove();
@@ -966,11 +1716,260 @@ class OzzWyg {
 
   /**
    * Get value from editor
+   * @param {string} editorID - Optional editor ID, if not provided returns first editor's value
    */
-  getValue() {
-    return this.playGround.innerHTML;
+  getValue(editorID = null) {
+    if (editorID && this.editorInstances.has(editorID)) {
+      return this.editorInstances.get(editorID).playGround.innerHTML;
+    }
+    // Return first editor's value for backward compatibility
+    if (this.editorInstances.size > 0) {
+      const firstInstance = this.editorInstances.values().next().value;
+      return firstInstance.playGround.innerHTML;
+    }
+    return this.playGround ? this.playGround.innerHTML : '';
+  }
+
+  /**
+   * Initialize interactive features for loaded content
+   * This should be called after setting content via setValue or when content is loaded
+   */
+  initializeContentFeatures() {
+    if (!this.playGround) return;
+    
+    // Wrap tables that aren't wrapped yet
+    const tables = this.playGround.querySelectorAll('table');
+    tables.forEach((table) => {
+      if (!table.closest('.ozz-wyg-table-wrapper')) {
+        const tableWrapped = document.createElement('div');
+        tableWrapped.classList.add('ozz-wyg-table-wrapper');
+        const tableParent = table.parentNode;
+        tableParent.insertBefore(tableWrapped, table);
+        tableWrapped.appendChild(table);
+        
+        // Clear inline styles
+        table.removeAttribute('style');
+        const tItems = table.querySelectorAll('tbody, thead, tfoot, tr, td, th');
+        tItems.forEach(item => {
+          item.removeAttribute('style');
+        });
+      }
+    });
+    
+    // Remove existing handlers to re-initialize
+    this.playGround.querySelectorAll('[data-link-handled]').forEach(el => {
+      el.removeAttribute('data-link-handled');
+    });
+    this.playGround.querySelectorAll('[data-media-handled]').forEach(el => {
+      el.removeAttribute('data-media-handled');
+    });
+    this.playGround.querySelectorAll('[data-table-handled]').forEach(el => {
+      el.removeAttribute('data-table-handled');
+    });
+    
+    // Initialize all interactive features
+    this.mediaPopover();
+    this.tableActions();
+    this.linkPopOver();
+  }
+
+  /**
+   * Set value for editor
+   * @param {string} value - HTML string to set
+   * @param {string|null} editorID - target editor ID; if null and single editor exists, applies to first
+   */
+  setValue(value, editorID = null) {
+    if (value === undefined || value === null) return;
+
+    let targetInstance = null;
+    if (editorID && this.editorInstances.has(editorID)) {
+      targetInstance = this.editorInstances.get(editorID);
+    } else if (this.editorInstances.size === 1) {
+      targetInstance = this.editorInstances.values().next().value;
+    }
+
+    let playGroundToSet = null;
+    let editorToSet = null;
+    let editorIDToSet = null;
+
+    if (targetInstance && targetInstance.playGround) {
+      playGroundToSet = targetInstance.playGround;
+      editorToSet = targetInstance.element;
+      editorIDToSet = targetInstance.id;
+    } else if (this.playGround) {
+      playGroundToSet = this.playGround;
+      editorToSet = this.editor;
+      editorIDToSet = this.editorID;
+    }
+
+    if (playGroundToSet) {
+      // Set the content
+      playGroundToSet.innerHTML = value;
+      
+      // Initialize features after DOM update
+      // Use captured values in closure to ensure correct editor instance
+      setTimeout(() => {
+        // Set context for initialization using captured values
+        const originalEditor = this.editor;
+        const originalPlayGround = this.playGround;
+        const originalEditorID = this.editorID;
+        
+        this.editor = editorToSet;
+        this.playGround = playGroundToSet;
+        this.editorID = editorIDToSet;
+        if (editorIDToSet) {
+          this.currentEditorID = editorIDToSet;
+        }
+        
+        this.initializeContentFeatures();
+        
+        // Restore original context after initialization
+        this.editor = originalEditor;
+        this.playGround = originalPlayGround;
+        this.editorID = originalEditorID;
+      }, 0);
+    }
+  }
+
+  /**
+   * Get editor instance by editor ID
+   * @param {string} editorID - Editor ID
+   * @returns {Object|null} Editor instance or null
+   */
+  getEditorInstance(editorID) {
+    return this.editorInstances.get(editorID) || null;
+  }
+
+  /**
+   * Get all editor instances
+   * @returns {Map} Map of all editor instances
+   */
+  getAllEditorInstances() {
+    return this.editorInstances;
+  }
+
+  /**
+   * Bind event to specific editor instance
+   * @param {string} editorID - Editor ID
+   * @param {string} eventName - Event name (without 'ozzwyg:' prefix)
+   * @param {Function} callback - Event callback function
+   */
+  on(editorID, eventName, callback) {
+    const instance = this.getEditorInstance(editorID);
+    if (instance && instance.element) {
+      instance.element.addEventListener(`ozzwyg:${eventName}`, callback);
+    }
+  }
+
+  /**
+   * Unbind event from specific editor instance
+   * @param {string} editorID - Editor ID
+   * @param {string} eventName - Event name (without 'ozzwyg:' prefix)
+   * @param {Function} callback - Event callback function
+   */
+  off(editorID, eventName, callback) {
+    const instance = this.getEditorInstance(editorID);
+    if (instance && instance.element) {
+      instance.element.removeEventListener(`ozzwyg:${eventName}`, callback);
+    }
   }
 }
+
+/**
+ * Static method to get OzzWyg instance from DOM element
+ * @param {string|HTMLElement} selector - CSS selector or DOM element
+ * @returns {OzzWyg|null} OzzWyg instance or null
+ */
+OzzWyg.getInstance = function(selector) {
+  let element = null;
+  if (typeof selector === 'string') {
+    element = document.querySelector(selector);
+  } else if (selector instanceof HTMLElement) {
+    element = selector;
+  }
+  
+  if (element) {
+    // Check if element has data-editor attribute
+    const editorID = element.getAttribute('data-editor');
+    if (editorID && OzzWyg.instances.has(editorID)) {
+      return OzzWyg.instances.get(editorID);
+    }
+    // Check if element itself is registered
+    if (OzzWyg.instances.has(element)) {
+      return OzzWyg.instances.get(element);
+    }
+  }
+  return null;
+};
+
+/**
+ * Static method to get value from editor by selector
+ * @param {string|HTMLElement} selector - CSS selector or DOM element
+ * @returns {string} Editor content or empty string
+ */
+OzzWyg.getValue = function(selector) {
+  const instance = OzzWyg.getInstance(selector);
+  if (instance) {
+    const element = typeof selector === 'string' ? document.querySelector(selector) : selector;
+    const editorID = element ? element.getAttribute('data-editor') : null;
+    return instance.getValue(editorID);
+  }
+  return '';
+};
+
+/**
+ * Static method to set value for editor by selector or element
+ * @param {string|HTMLElement} selector - CSS selector or DOM element
+ * @param {string} value - HTML string
+ */
+OzzWyg.setValue = function(selector, value) {
+  const instance = OzzWyg.getInstance(selector);
+  if (instance) {
+    const element = typeof selector === 'string' ? document.querySelector(selector) : selector;
+    const editorID = element ? element.getAttribute('data-editor') : null;
+    instance.setValue(value, editorID);
+  }
+};
+
+/**
+ * Static method to bind event to editor by selector
+ * @param {string|HTMLElement} selector - CSS selector or DOM element
+ * @param {string} eventName - Event name (without 'ozzwyg:' prefix)
+ * @param {Function} callback - Event callback function
+ */
+OzzWyg.on = function(selector, eventName, callback) {
+  const instance = OzzWyg.getInstance(selector);
+  if (instance) {
+    const element = typeof selector === 'string' ? document.querySelector(selector) : selector;
+    const editorID = element ? element.getAttribute('data-editor') : null;
+    if (editorID) {
+      instance.on(editorID, eventName, callback);
+    } else if (element) {
+      // Fallback: bind directly to element
+      element.addEventListener(`ozzwyg:${eventName}`, callback);
+    }
+  }
+};
+
+/**
+ * Static method to unbind event from editor by selector
+ * @param {string|HTMLElement} selector - CSS selector or DOM element
+ * @param {string} eventName - Event name (without 'ozzwyg:' prefix)
+ * @param {Function} callback - Event callback function
+ */
+OzzWyg.off = function(selector, eventName, callback) {
+  const instance = OzzWyg.getInstance(selector);
+  if (instance) {
+    const element = typeof selector === 'string' ? document.querySelector(selector) : selector;
+    const editorID = element ? element.getAttribute('data-editor') : null;
+    if (editorID) {
+      instance.off(editorID, eventName, callback);
+    } else if (element) {
+      // Fallback: unbind directly from element
+      element.removeEventListener(`ozzwyg:${eventName}`, callback);
+    }
+  }
+};
 
 // Default options for the plugin
 OzzWyg.defaults = {

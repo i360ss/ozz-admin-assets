@@ -5280,11 +5280,18 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           var _this7 = this;
           _classCallCheck(this, OzzWyg);
           this.options = _objectSpread(_objectSpread({}, OzzWyg.defaults), options);
-          if (_typeof2(this.options.selector) === 'object') {
-            this.editors = [this.options.selector];
-          } else {
-            this.editors = document.querySelectorAll(this.options.selector).length > 0 ? document.querySelectorAll(this.options.selector) : false;
+
+          // Normalize selector: accept string, single DOM element, NodeList, or array of elements
+          var editorElements = [];
+          var selector = this.options.selector;
+          if (typeof selector === 'string') {
+            editorElements = document.querySelectorAll(selector);
+          } else if (selector instanceof Element) {
+            editorElements = [selector];
+          } else if (selector instanceof NodeList || Array.isArray(selector)) {
+            editorElements = selector;
           }
+          this.editors = editorElements.length > 0 ? editorElements : false;
 
           // Tools
           this.tools = {
@@ -5409,20 +5416,89 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           };
 
           // Initiate Each Editors
+          this.editorInstances = new Map();
           if (this.editors) {
             this.editors.forEach(function (editor) {
-              _this7.editorID = "i-".concat(_this7.randomId());
-              editor.setAttribute('data-editor', _this7.editorID);
+              var _ref15, _ref16;
+              var editorID = "i-".concat(_this7.randomId());
+              editor.setAttribute('data-editor', editorID);
+
+              // Capture initial content before we overwrite the DOM
+              var initialContent = (_ref15 = (_ref16 = typeof _this7.options.value === 'string' ? _this7.options.value : null) !== null && _ref16 !== void 0 ? _ref16 : editor.getAttribute('data-value')) !== null && _ref15 !== void 0 ? _ref15 : editor.innerHTML;
+              var instance = {
+                id: editorID,
+                element: editor,
+                playGround: null,
+                ozzWygInstance: _this7,
+                initialContent: initialContent
+              };
+              _this7.editorInstances.set(editorID, instance);
+              _this7.currentEditorID = editorID;
               _this7.editor = editor;
+              _this7.editorID = editorID;
               _this7.initEditor();
+              instance.playGround = _this7.playGround;
+
+              // Apply initial content if provided
+              if (initialContent !== null && initialContent !== undefined && initialContent.trim() !== '') {
+                _this7.setValue(initialContent, editorID);
+              } else {
+                // Initialize features for any existing content in playground
+                setTimeout(function () {
+                  // Ensure we're using the correct instance
+                  var instancePlayGround = instance.playGround;
+                  var instanceEditor = instance.element;
+                  if (instancePlayGround) {
+                    // Set context for initialization
+                    var originalEditor = _this7.editor;
+                    var originalPlayGround = _this7.playGround;
+                    var originalEditorID = _this7.editorID;
+                    _this7.editor = instanceEditor;
+                    _this7.playGround = instancePlayGround;
+                    _this7.editorID = instance.id;
+                    _this7.currentEditorID = instance.id;
+                    _this7.initializeContentFeatures();
+
+                    // Restore original context
+                    _this7.editor = originalEditor;
+                    _this7.playGround = originalPlayGround;
+                    _this7.editorID = originalEditorID;
+                  }
+                }, 0);
+              }
+
+              // Register instance in static registry
+              OzzWyg.instances.set(editor, _this7);
+              OzzWyg.instances.set(editorID, _this7);
             });
           }
         }
 
         /**
-         * Initialize Wysiwyg Editor
+         * Set active editor context based on a child element (toolbar button / playground)
+         * @param {HTMLElement} element
+         * @returns {boolean} true if context updated
          */
         return _createClass(OzzWyg, [{
+          key: "setActiveContextFromElement",
+          value: function setActiveContextFromElement(element) {
+            if (!element) return false;
+            var editorEl = element.closest('.ozz-wyg');
+            if (!editorEl) return false;
+            var editorID = editorEl.getAttribute('data-editor');
+            var instance = this.editorInstances.get(editorID);
+            if (!instance) return false;
+            this.editor = instance.element;
+            this.playGround = instance.playGround;
+            this.editorID = editorID;
+            this.currentEditorID = editorID;
+            return true;
+          }
+
+          /**
+           * Initialize Wysiwyg Editor
+           */
+        }, {
           key: "initEditor",
           value: function initEditor() {
             var _this8 = this;
@@ -5430,32 +5506,635 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             this.editor.innerHTML = this.editorDOM();
             this.editor.querySelectorAll('button[data-action]').forEach(function (trigger) {
               trigger.addEventListener('click', function (e) {
+                _this8.setActiveContextFromElement(e.target);
                 _this8.fireAction(e);
               });
             });
+
+            // Initialize child tool dropdowns
+            this.editor.querySelectorAll('.ozz-wyg__tool-has-child').forEach(function (parent) {
+              var trigger = parent.querySelector('.more-tools-trigger');
+              var childMenu = parent.parentElement.querySelector('.ozz-wyg__tool-child');
+              if (trigger && childMenu) {
+                trigger.addEventListener('click', function (e) {
+                  e.stopPropagation();
+                  childMenu.classList.toggle('active');
+                });
+              }
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function (e) {
+              if (!e.target.closest('.ozz-wyg__tool-has-child')) {
+                _this8.editor.querySelectorAll('.ozz-wyg__tool-child').forEach(function (menu) {
+                  menu.classList.remove('active');
+                });
+              }
+            });
             this.playGround = this.editor.querySelector('[data-editor-area]');
 
-            // Modify on input
-            this.playGround.addEventListener('input', function () {
-              // Modify tables
-              var tables = _this8.playGround.querySelectorAll('table');
-              tables.forEach(function (table) {
-                // Wrap table
-                if (!table.closest('.ozz-wyg-table-wrapper')) {
-                  var tableWrapped = document.createElement('div');
-                  tableWrapped.classList.add('ozz-wyg-table-wrapper');
-                  tableWrapped.innerHTML = table.outerHTML;
-                  table.outerHTML = tableWrapped.outerHTML;
-                }
+            // Initialize event listeners
+            this.initEventListeners();
+          }
 
-                // Clear inline styles
-                table.removeAttribute('style');
-                var tItems = table.querySelectorAll('tbody, thead, tfoot, tr, td, th');
-                tItems.forEach(function (item) {
-                  item.removeAttribute('style');
-                });
+          /**
+           * Initialize all event listeners for the editor
+           */
+        }, {
+          key: "initEventListeners",
+          value: function initEventListeners() {
+            var _this9 = this;
+            // Input event - fires on content change
+            this.playGround.addEventListener('input', function (e) {
+              _this9.setActiveContextFromElement(_this9.playGround);
+              _this9.handleInput(e);
+            });
+
+            // Focus event - when editor gains focus
+            this.playGround.addEventListener('focus', function (e) {
+              _this9.setActiveContextFromElement(_this9.playGround);
+              _this9.emitEvent('focus', {
+                editorID: _this9.editorID,
+                event: e
+              });
+              _this9.editor.classList.add('ozz-wyg--focused');
+            });
+
+            // Blur event - when editor loses focus
+            this.playGround.addEventListener('blur', function (e) {
+              _this9.setActiveContextFromElement(_this9.playGround);
+              _this9.emitEvent('blur', {
+                editorID: _this9.editorID,
+                event: e
+              });
+              _this9.editor.classList.remove('ozz-wyg--focused');
+              _this9.emitEvent('change', {
+                editorID: _this9.editorID,
+                content: _this9.playGround.innerHTML,
+                event: e
               });
             });
+
+            // Paste event - clean pasted content
+            this.playGround.addEventListener('paste', function (e) {
+              _this9.setActiveContextFromElement(_this9.playGround);
+              _this9.handlePaste(e);
+            });
+
+            // Keyboard shortcuts
+            this.playGround.addEventListener('keydown', function (e) {
+              _this9.setActiveContextFromElement(_this9.playGround);
+              _this9.handleKeydown(e);
+            });
+
+            // Selection change - update toolbar states
+            document.addEventListener('selectionchange', function () {
+              var selection = window.getSelection();
+              if (selection.rangeCount > 0) {
+                var range = selection.getRangeAt(0);
+                var commonAncestor = range.commonAncestorContainer;
+                var node = commonAncestor.nodeType === 3 ? commonAncestor.parentElement : commonAncestor;
+                if (node) {
+                  if (_this9.setActiveContextFromElement(node) && _this9.playGround.contains(node)) {
+                    _this9.updateToolbarStates();
+                  }
+                }
+              }
+            });
+
+            // Click event - update toolbar states when clicking in editor
+            this.playGround.addEventListener('click', function () {
+              _this9.setActiveContextFromElement(_this9.playGround);
+              setTimeout(function () {
+                return _this9.updateToolbarStates();
+              }, 10);
+            });
+
+            // Mouseup event - update toolbar states after selection
+            this.playGround.addEventListener('mouseup', function () {
+              _this9.setActiveContextFromElement(_this9.playGround);
+              setTimeout(function () {
+                return _this9.updateToolbarStates();
+              }, 10);
+            });
+
+            // Keyup event - update toolbar states after keyboard actions
+            this.playGround.addEventListener('keyup', function () {
+              _this9.setActiveContextFromElement(_this9.playGround);
+              setTimeout(function () {
+                return _this9.updateToolbarStates();
+              }, 10);
+            });
+
+            // Keydown event - update toolbar states for arrow keys and other navigation
+            this.playGround.addEventListener('keydown', function (e) {
+              if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+                _this9.setActiveContextFromElement(_this9.playGround);
+                setTimeout(function () {
+                  return _this9.updateToolbarStates();
+                }, 10);
+              }
+            });
+          }
+
+          /**
+           * Handle input event
+           */
+        }, {
+          key: "handleInput",
+          value: function handleInput(e) {
+            // Modify tables
+            var tables = this.playGround.querySelectorAll('table');
+            tables.forEach(function (table) {
+              // Wrap table
+              if (!table.closest('.ozz-wyg-table-wrapper')) {
+                var tableWrapped = document.createElement('div');
+                tableWrapped.classList.add('ozz-wyg-table-wrapper');
+                tableWrapped.innerHTML = table.outerHTML;
+                table.outerHTML = tableWrapped.outerHTML;
+              }
+
+              // Clear inline styles
+              table.removeAttribute('style');
+              var tItems = table.querySelectorAll('tbody, thead, tfoot, tr, td, th');
+              tItems.forEach(function (item) {
+                item.removeAttribute('style');
+              });
+            });
+
+            // Emit custom input event
+            this.emitEvent('input', {
+              editorID: this.editorID,
+              content: this.playGround.innerHTML,
+              event: e
+            });
+          }
+
+          /**
+           * Handle paste event - clean pasted content
+           */
+        }, {
+          key: "handlePaste",
+          value: function handlePaste(e) {
+            e.preventDefault();
+
+            // Get pasted content
+            var clipboardData = e.clipboardData || window.clipboardData;
+            var htmlData = clipboardData.getData('text/html');
+            var textData = clipboardData.getData('text/plain');
+            var pastedData = htmlData || textData;
+
+            // Clean the pasted content
+            var cleanedContent = this.cleanPastedContent(pastedData);
+            try {
+              // Insert cleaned content
+              var selection = window.getSelection();
+              if (selection.rangeCount > 0) {
+                var range = selection.getRangeAt(0);
+
+                // Ensure range is within this editor; otherwise collapse to end of playground
+                var containerNode = range.commonAncestorContainer.nodeType === 3 ? range.commonAncestorContainer.parentElement : range.commonAncestorContainer;
+                if (!containerNode || !this.playGround.contains(containerNode)) {
+                  range.selectNodeContents(this.playGround);
+                  range.collapse(false);
+                }
+
+                // Delete selected content
+                range.deleteContents();
+
+                // Insert cleaned content
+                if (cleanedContent) {
+                  if (htmlData && cleanedContent.includes('<')) {
+                    // Treat as HTML: parse into a temp container and move children into a fragment
+                    var tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = cleanedContent;
+                    var fragment = document.createDocumentFragment();
+                    while (tempDiv.firstChild) {
+                      fragment.appendChild(tempDiv.firstChild);
+                    }
+                    range.insertNode(fragment);
+
+                    // Move cursor to end of inserted content
+                    var lastChild = this.playGround.lastChild;
+                    if (lastChild) {
+                      range.setStartAfter(lastChild);
+                    }
+                  } else {
+                    // Plain text
+                    var textNode = document.createTextNode(cleanedContent);
+                    range.insertNode(textNode);
+                    range.setStartAfter(textNode);
+                  }
+                  range.collapse(true);
+
+                  // Update selection
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+              } else {
+                // No selection, insert at end of playground
+                var _range = document.createRange();
+                _range.selectNodeContents(this.playGround);
+                _range.collapse(false);
+                if (cleanedContent) {
+                  if (htmlData && cleanedContent.includes('<')) {
+                    var _tempDiv = document.createElement('div');
+                    _tempDiv.innerHTML = cleanedContent;
+                    var _fragment = document.createDocumentFragment();
+                    while (_tempDiv.firstChild) {
+                      _fragment.appendChild(_tempDiv.firstChild);
+                    }
+                    _range.insertNode(_fragment);
+                  } else {
+                    var _textNode = document.createTextNode(cleanedContent);
+                    _range.insertNode(_textNode);
+                  }
+                }
+              }
+            } catch (err) {
+              // Fallback: let the browser handle it if our manual insertion fails
+              if (cleanedContent) {
+                document.execCommand('insertHTML', false, cleanedContent);
+              }
+            }
+
+            // Emit paste event
+            this.emitEvent('paste', {
+              editorID: this.editorID,
+              originalContent: pastedData,
+              cleanedContent: cleanedContent,
+              event: e
+            });
+
+            // Trigger input event manually
+            this.playGround.dispatchEvent(new Event('input', {
+              bubbles: true
+            }));
+          }
+
+          /**
+           * Clean pasted content - remove unwanted styles and tags
+           */
+        }, {
+          key: "cleanPastedContent",
+          value: function cleanPastedContent(content) {
+            // Create temporary div to parse HTML
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+
+            // Remove unwanted attributes
+            var unwantedAttributes = ['style', 'class', 'id', 'width', 'height', 'border'];
+            var allElements = tempDiv.querySelectorAll('*');
+            allElements.forEach(function (el) {
+              unwantedAttributes.forEach(function (attr) {
+                el.removeAttribute(attr);
+              });
+            });
+
+            // Remove script and style tags
+            var scripts = tempDiv.querySelectorAll('script, style');
+            scripts.forEach(function (el) {
+              return el.remove();
+            });
+
+            // Clean up empty elements
+            var emptyElements = tempDiv.querySelectorAll('p:empty, div:empty, span:empty');
+            emptyElements.forEach(function (el) {
+              if (el.textContent.trim() === '') {
+                el.remove();
+              }
+            });
+            return tempDiv.innerHTML || tempDiv.textContent;
+          }
+
+          /**
+           * Handle keyboard shortcuts
+           */
+        }, {
+          key: "handleKeydown",
+          value: function handleKeydown(e) {
+            var _this10 = this;
+            // Ctrl/Cmd + B - Bold
+            if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+              e.preventDefault();
+              this.exeCMD('bold');
+              this.updateToolbarStates();
+              return;
+            }
+
+            // Ctrl/Cmd + I - Italic
+            if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+              e.preventDefault();
+              this.exeCMD('italic');
+              this.updateToolbarStates();
+              return;
+            }
+
+            // Ctrl/Cmd + U - Underline
+            if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+              e.preventDefault();
+              this.exeCMD('underline');
+              this.updateToolbarStates();
+              return;
+            }
+
+            // Ctrl/Cmd + K - Link
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+              e.preventDefault();
+              var linkBtn = this.editor.querySelector('button[data-action="link"]');
+              if (linkBtn) linkBtn.click();
+              return;
+            }
+
+            // Ctrl/Cmd + Z - Undo
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+              // Allow default undo behavior
+              setTimeout(function () {
+                return _this10.updateToolbarStates();
+              }, 10);
+              return;
+            }
+
+            // Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y - Redo
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z' || (e.ctrlKey || e.metaKey) && e.key === 'y') {
+              // Allow default redo behavior
+              setTimeout(function () {
+                return _this10.updateToolbarStates();
+              }, 10);
+              return;
+            }
+
+            // Emit keydown event
+            this.emitEvent('keydown', {
+              editorID: this.editorID,
+              key: e.key,
+              ctrlKey: e.ctrlKey,
+              metaKey: e.metaKey,
+              shiftKey: e.shiftKey,
+              event: e
+            });
+          }
+
+          /**
+           * Update toolbar button states based on current selection
+           */
+        }, {
+          key: "updateToolbarStates",
+          value: function updateToolbarStates() {
+            var selection = window.getSelection();
+            if (!selection.rangeCount) {
+              // Clear all active states if no selection
+              this.clearAllToolbarStates();
+              return;
+            }
+            var range = selection.getRangeAt(0);
+            var commonAncestor = range.commonAncestorContainer;
+
+            // Check if selection is within this editor
+            var node = commonAncestor.nodeType === 3 ? commonAncestor.parentElement : commonAncestor;
+            if (!node || !this.playGround.contains(node)) {
+              this.clearAllToolbarStates();
+              return;
+            }
+
+            // Store current focus to restore later
+            var wasFocused = document.activeElement === this.playGround;
+
+            // Temporarily focus playground for queryCommandState to work correctly
+            if (!wasFocused) {
+              this.playGround.focus();
+            }
+
+            // Update bold button
+            var boldBtn = this.editor.querySelector('button[data-action="bold"]');
+            if (boldBtn) {
+              try {
+                var isBold = document.queryCommandState('bold');
+                boldBtn.classList.toggle('active', isBold);
+              } catch (e) {
+                // Fallback: check if parent is strong or b tag
+                var parent = this.getParentTag(range, ['strong', 'b']);
+                boldBtn.classList.toggle('active', !!parent);
+              }
+            }
+
+            // Update italic button
+            var italicBtn = this.editor.querySelector('button[data-action="italic"]');
+            if (italicBtn) {
+              try {
+                var isItalic = document.queryCommandState('italic');
+                italicBtn.classList.toggle('active', isItalic);
+              } catch (e) {
+                var _parent = this.getParentTag(range, ['em', 'i']);
+                italicBtn.classList.toggle('active', !!_parent);
+              }
+            }
+
+            // Update underline button
+            var underlineBtn = this.editor.querySelector('button[data-action="underline"]');
+            if (underlineBtn) {
+              try {
+                var isUnderline = document.queryCommandState('underline');
+                underlineBtn.classList.toggle('active', isUnderline);
+              } catch (e) {
+                var _parent2 = this.getParentTag(range, ['u']);
+                underlineBtn.classList.toggle('active', !!_parent2);
+              }
+            }
+
+            // Update strikethrough button
+            var strikeBtn = this.editor.querySelector('button[data-action="strikethrough"]');
+            if (strikeBtn) {
+              try {
+                var isStrike = document.queryCommandState('strikethrough');
+                strikeBtn.classList.toggle('active', isStrike);
+              } catch (e) {
+                var _parent3 = this.getParentTag(range, ['s', 'strike', 'del']);
+                strikeBtn.classList.toggle('active', !!_parent3);
+              }
+            }
+
+            // Update subscript button
+            var subBtn = this.editor.querySelector('button[data-action="subscript"]');
+            if (subBtn) {
+              try {
+                var isSub = document.queryCommandState('subscript');
+                subBtn.classList.toggle('active', isSub);
+              } catch (e) {
+                var _parent4 = this.getParentTag(range, ['sub']);
+                subBtn.classList.toggle('active', !!_parent4);
+              }
+            }
+
+            // Update superscript button
+            var supBtn = this.editor.querySelector('button[data-action="superscript"]');
+            if (supBtn) {
+              try {
+                var isSup = document.queryCommandState('superscript');
+                supBtn.classList.toggle('active', isSup);
+              } catch (e) {
+                var _parent5 = this.getParentTag(range, ['sup']);
+                supBtn.classList.toggle('active', !!_parent5);
+              }
+            }
+
+            // Update format block (headings, paragraph)
+            this.updateFormatBlockState(range);
+
+            // Update list buttons
+            var olBtn = this.editor.querySelector('button[data-action="insertOrderedList"]');
+            if (olBtn) {
+              try {
+                var isOL = document.queryCommandState('insertOrderedList');
+                olBtn.classList.toggle('active', isOL);
+              } catch (e) {
+                var _parent6 = this.getParentTag(range, ['ol']);
+                olBtn.classList.toggle('active', !!_parent6);
+              }
+            }
+            var ulBtn = this.editor.querySelector('button[data-action="insertUnorderedList"]');
+            if (ulBtn) {
+              try {
+                var isUL = document.queryCommandState('insertUnorderedList');
+                ulBtn.classList.toggle('active', isUL);
+              } catch (e) {
+                var _parent7 = this.getParentTag(range, ['ul']);
+                ulBtn.classList.toggle('active', !!_parent7);
+              }
+            }
+
+            // Update alignment buttons
+            var alignLeftBtn = this.editor.querySelector('button[data-action="justifyLeft"]');
+            if (alignLeftBtn) {
+              try {
+                var isLeft = document.queryCommandState('justifyLeft');
+                alignLeftBtn.classList.toggle('active', isLeft);
+              } catch (e) {
+                alignLeftBtn.classList.remove('active');
+              }
+            }
+            var alignCenterBtn = this.editor.querySelector('button[data-action="justifyCenter"]');
+            if (alignCenterBtn) {
+              try {
+                var isCenter = document.queryCommandState('justifyCenter');
+                alignCenterBtn.classList.toggle('active', isCenter);
+              } catch (e) {
+                alignCenterBtn.classList.remove('active');
+              }
+            }
+            var alignRightBtn = this.editor.querySelector('button[data-action="justifyRight"]');
+            if (alignRightBtn) {
+              try {
+                var isRight = document.queryCommandState('justifyRight');
+                alignRightBtn.classList.toggle('active', isRight);
+              } catch (e) {
+                alignRightBtn.classList.remove('active');
+              }
+            }
+            var justifyBtn = this.editor.querySelector('button[data-action="justifyFull"]');
+            if (justifyBtn) {
+              try {
+                var isJustify = document.queryCommandState('justifyFull');
+                justifyBtn.classList.toggle('active', isJustify);
+              } catch (e) {
+                justifyBtn.classList.remove('active');
+              }
+            }
+          }
+
+          /**
+           * Get parent element with specific tag names
+           */
+        }, {
+          key: "getParentTag",
+          value: function getParentTag(range, tagNames) {
+            var node = range.commonAncestorContainer;
+            if (node.nodeType === 3) {
+              node = node.parentElement;
+            }
+            while (node && node !== this.playGround) {
+              if (node.nodeType === 1 && tagNames.includes(node.tagName.toLowerCase())) {
+                return node;
+              }
+              node = node.parentElement;
+            }
+            return null;
+          }
+
+          /**
+           * Update format block state (headings, paragraph)
+           */
+        }, {
+          key: "updateFormatBlockState",
+          value: function updateFormatBlockState(range) {
+            var node = range.commonAncestorContainer;
+            if (node.nodeType === 3) {
+              node = node.parentElement;
+            }
+
+            // Find the block-level element
+            var blockTag = null;
+            while (node && node !== this.playGround) {
+              if (node.nodeType === 1) {
+                var tagName = node.tagName.toLowerCase();
+                if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'blockquote', 'pre', 'code', 'div'].includes(tagName)) {
+                  blockTag = tagName;
+                  break;
+                }
+              }
+              node = node.parentElement;
+            }
+
+            // Update heading/format buttons
+            var headingBtns = this.editor.querySelectorAll('button[data-action="formatBlock"]');
+            headingBtns.forEach(function (btn) {
+              var value = btn.getAttribute('data-value');
+              if (value) {
+                var valueLower = value.toLowerCase();
+                // Handle paragraph - can be 'p' or 'P'
+                if (valueLower === 'p' && (blockTag === 'p' || blockTag === 'div' || !blockTag)) {
+                  btn.classList.toggle('active', true);
+                } else if (valueLower === blockTag) {
+                  btn.classList.toggle('active', true);
+                } else {
+                  btn.classList.remove('active');
+                }
+              }
+            });
+          }
+
+          /**
+           * Clear all toolbar button active states
+           */
+        }, {
+          key: "clearAllToolbarStates",
+          value: function clearAllToolbarStates() {
+            var allButtons = this.editor.querySelectorAll('button[data-action]');
+            allButtons.forEach(function (btn) {
+              return btn.classList.remove('active');
+            });
+          }
+
+          /**
+           * Emit custom event
+           */
+        }, {
+          key: "emitEvent",
+          value: function emitEvent(eventName) {
+            var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+            var event = new CustomEvent("ozzwyg:".concat(eventName), {
+              detail: _objectSpread({
+                editorID: this.editorID,
+                editor: this.editor,
+                playGround: this.playGround
+              }, data),
+              bubbles: true,
+              cancelable: true
+            });
+
+            // Dispatch on both the editor element and the playground
+            this.editor.dispatchEvent(event);
+            this.playGround.dispatchEvent(event);
           }
 
           /**
@@ -5465,43 +6144,33 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "editorDOM",
           value: function editorDOM() {
-            var _this9 = this;
+            var _this11 = this;
             var toolsDOM = '';
             this.options.tools.forEach(function (tool) {
-              if (_this9.tools[tool]) {
+              if (_this11.tools[tool]) {
                 var parentTool = document.createElement('div');
                 parentTool.classList.add('ozz-wyg__tool', "ozz-wyg__tool--".concat(tool));
-                if (_this9.tools[tool].child) {
-                  parentTool.innerHTML = "<div class=\"ozz-wyg__tool-has-child\">".concat(_this9.tools[tool].dom, "<span class=\"more-tools-trigger\"></span></div>");
+                if (_this11.tools[tool].child) {
+                  parentTool.innerHTML = "<div class=\"ozz-wyg__tool-has-child\">".concat(_this11.tools[tool].dom, "<span class=\"more-tools-trigger\"></span></div>");
                   // Get Child tools
                   var childElementWrapper = document.createElement('div');
                   childElementWrapper.classList.add('ozz-wyg__tool-child');
-                  _this9.options.tools.forEach(function (child2) {
-                    if (_this9.tools[tool].child[child2]) {
-                      var childItem = _this9.tools[tool].child[child2];
+                  _this11.options.tools.forEach(function (child2) {
+                    if (_this11.tools[tool].child[child2]) {
+                      var childItem = _this11.tools[tool].child[child2];
                       childElementWrapper.innerHTML += childItem.dom;
                     }
                   });
                   parentTool.appendChild(childElementWrapper);
                 } else {
-                  parentTool.innerHTML = _this9.tools[tool].dom;
+                  parentTool.innerHTML = _this11.tools[tool].dom;
                 }
                 toolsDOM += parentTool.outerHTML;
               }
             });
             this.toolbar = "<div class=\"ozz-wyg__toolbar\">".concat(toolsDOM, "</div>");
-
-            // Editor Area
-            this.editableArea = document.createElement('div');
-            this.editableArea.setAttribute('data-editor-area', true);
-            this.editableArea.setAttribute('contenteditable', true);
-            this.editableArea.classList.add('ozz-wyg__editor-area');
-            var existingEditorArea = this.editor.querySelector('[data-editor-area]');
-            if (existingEditorArea) {
-              var innerContent = existingEditorArea.innerHTML;
-              this.editableArea.innerHTML = innerContent;
-            }
-            return this.toolbar + this.editableArea.outerHTML;
+            this.editableArea = "<div class=\"ozz-wyg__editor-area\" data-editor-area contenteditable=\"true\"></div>";
+            return this.toolbar + this.editableArea;
           }
 
           /**
@@ -5555,6 +6224,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "fireAction",
           value: function fireAction(event) {
+            var _this12 = this;
             var action = event.target.getAttribute('data-action');
 
             // Format block
@@ -5577,6 +6247,11 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             } else {
               this.exeCMD(action, value);
             }
+
+            // Update toolbar states after action
+            setTimeout(function () {
+              return _this12.updateToolbarStates();
+            }, 10);
           }
 
           /**
@@ -5585,12 +6260,13 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "linkPopUp",
           value: function linkPopUp(ev) {
-            var _selection$anchorNode,
-              _this10 = this;
+            var _this13 = this;
             var linkCls = 'ozz-wyg__tool-link-',
-              parent = ev.target.closest(".".concat(linkCls, "trigger")),
-              settingsDOM = parent.querySelector(".".concat(linkCls, "setting")),
-              selection = window.getSelection();
+              parent = ev.target.closest(".".concat(linkCls, "trigger"));
+            if (!parent) return;
+            var settingsDOM = parent.querySelector(".".concat(linkCls, "setting"));
+            if (!settingsDOM) return;
+            var selection = window.getSelection();
 
             // Store selection
             var sRange = false;
@@ -5600,23 +6276,36 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             }
 
             // Check if there's an existing anchor link
-            var existingAnchor = ((_selection$anchorNode = selection.anchorNode) === null || _selection$anchorNode === void 0 ? void 0 : _selection$anchorNode.parentElement.tagName) === 'A' ? selection.anchorNode.parentElement : null,
-              existingURL = existingAnchor ? existingAnchor.href : '',
-              existingTarget = existingAnchor ? existingAnchor.target : '';
-            settingsDOM.innerHTML = "\n      <label>URL:</label> <input form=\"\" type=\"text\" id=\"url-".concat(this.editorID, "\" value=\"").concat(existingURL, "\"><br>\n      <label>Target:</label> <input form=\"\" type=\"text\" id=\"target-").concat(this.editorID, "\" value=\"").concat(existingTarget ? existingTarget : '_blank', "\"><br>\n      <button type=\"button\" class=\"ozz-wyg-regular-btn\" id=\"insertLinkTrigger-").concat(this.editorID, "\">").concat(existingAnchor ? 'Update' : 'Insert', "</button>");
+            var existingAnchor = null;
+            if (selection.anchorNode) {
+              var _parent8 = selection.anchorNode.parentElement;
+              if (_parent8 && _parent8.tagName === 'A') {
+                existingAnchor = _parent8;
+              } else if (_parent8 && _parent8.closest('a')) {
+                existingAnchor = _parent8.closest('a');
+              }
+            }
+            var existingURL = existingAnchor ? existingAnchor.href : '';
+            var existingTarget = existingAnchor ? existingAnchor.target : '';
+            settingsDOM.innerHTML = "\n      <label>URL:</label> <input type=\"text\" id=\"url-".concat(this.editorID, "\" value=\"").concat(existingURL, "\"><br>\n      <label>Target:</label> <input type=\"text\" id=\"target-").concat(this.editorID, "\" value=\"").concat(existingTarget ? existingTarget : '_blank', "\"><br>\n      <button type=\"button\" class=\"ozz-wyg-regular-btn\" id=\"insertLinkTrigger-").concat(this.editorID, "\">").concat(existingAnchor ? 'Update' : 'Insert', "</button>");
             settingsDOM.classList.toggle('active');
 
             // Insert or update link
             var insertLinkTrigger = settingsDOM.querySelector('#insertLinkTrigger-' + this.editorID);
             insertLinkTrigger.addEventListener('click', function () {
-              var urlInput = settingsDOM.querySelector('#url-' + _this10.editorID).value;
-              var targetInput = settingsDOM.querySelector('#target-' + _this10.editorID).value;
+              var urlInput = settingsDOM.querySelector('#url-' + _this13.editorID).value;
+              var targetInput = settingsDOM.querySelector('#target-' + _this13.editorID).value;
               if (urlInput && targetInput) {
-                var anchor = existingAnchor || document.createElement('a');
-                anchor.href = urlInput;
-                anchor.target = targetInput;
-                anchor.textContent = existingAnchor ? existingAnchor.textContent : selectionStr;
-                if (!existingAnchor) {
+                if (existingAnchor) {
+                  // Update existing anchor
+                  existingAnchor.href = urlInput;
+                  existingAnchor.target = targetInput;
+                } else {
+                  // Create new anchor
+                  var anchor = document.createElement('a');
+                  anchor.href = urlInput;
+                  anchor.target = targetInput;
+                  anchor.textContent = selectionStr || urlInput;
                   if (sRange) {
                     selection.removeAllRanges();
                     selection.addRange(sRange);
@@ -5624,7 +6313,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                   document.execCommand('insertHTML', false, anchor.outerHTML);
                 }
                 settingsDOM.classList.remove('active'); // Close Popup
-                _this10.linkPopOver(); // Init Link Popover
+                _this13.linkPopOver(); // Init Link Popover
               }
             });
 
@@ -5632,7 +6321,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             document.addEventListener('click', function (e) {
               if (!parent.contains(e.target)) {
                 settingsDOM.classList.remove('active');
-                _this10.linkPopOver(); // Init Link Popover
+                _this13.linkPopOver(); // Init Link Popover
               }
             });
           }
@@ -5643,15 +6332,22 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "linkPopOver",
           value: function linkPopOver() {
-            var _this11 = this;
+            var _this14 = this;
             this.playGround.querySelectorAll('a').forEach(function (anchor) {
+              // Only add listeners if not already added
+              if (anchor.hasAttribute('data-link-handled')) {
+                return;
+              }
+              anchor.setAttribute('data-link-handled', 'true');
               anchor.addEventListener('click', function (e) {
                 if (anchor.getAttribute('role') !== 'popover') {
+                  e.preventDefault();
+                  e.stopPropagation();
                   var popoverDOM = document.createElement('span');
                   popoverDOM.setAttribute('contenteditable', false);
                   popoverDOM.classList.add('ozz-wyg-popover');
                   popoverDOM.innerHTML = "\n          <a href=\"".concat(anchor.href, "\" role=\"popover\" target=\"_blank\">").concat(anchor.href, "</a>\n          <button type=\"button\" class=\"ozz-wyg-editlink\"></button>\n          <button type=\"button\" class=\"ozz-wyg-unlink\"></button>");
-                  if (_this11.editor.querySelectorAll('.ozz-wyg-popover').length === 0) {
+                  if (_this14.editor.querySelectorAll('.ozz-wyg-popover').length === 0) {
                     anchor.insertAdjacentElement('afterend', popoverDOM);
 
                     // Position popover element
@@ -5685,7 +6381,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
 
                   // Edit this link
                   popoverDOM.querySelector('.ozz-wyg-editlink').addEventListener('click', function () {
-                    var linkBtn = _this11.editor.querySelector('button[data-action="link"]');
+                    var linkBtn = _this14.editor.querySelector('button[data-action="link"]');
                     setTimeout(function () {
                       linkBtn.click();
                     }, 1);
@@ -5701,27 +6397,29 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "tablePopUp",
           value: function tablePopUp(ev) {
-            var _this12 = this;
+            var _this15 = this;
             var tableCls = 'ozz-wyg__tool-table-',
-              parent = ev.target.closest(".".concat(tableCls, "trigger")),
-              settingsDOM = parent.querySelector(".".concat(tableCls, "setting")),
-              selection = window.getSelection();
+              parent = ev.target.closest(".".concat(tableCls, "trigger"));
+            if (!parent) return;
+            var settingsDOM = parent.querySelector(".".concat(tableCls, "setting"));
+            if (!settingsDOM) return;
+            var selection = window.getSelection();
 
             // Store selection
             var sRange = false;
             if (selection.getRangeAt && selection.rangeCount) {
               sRange = selection.getRangeAt(0).cloneRange();
             }
-            settingsDOM.innerHTML = "\n      <input form=\"\" type=\"number\" min=\"1\" max=\"100\" value=\"2\" placeholder=\"X\" id=\"row-".concat(this.editorID, "\">\n      <input form=\"\" type=\"number\" min=\"1\" max=\"100\" value=\"2\" placeholder=\"Y\" id=\"column-").concat(this.editorID, "\">\n      <span class=\"sub-options\">\n        <span>\n          <input form=\"\" type=\"checkbox\" id=\"has-th-").concat(this.editorID, "\">\n          <label for=\"has-th-").concat(this.editorID, "\"\">No Header</label>\n        </span>\n        <span>\n          <input form=\"\" type=\"checkbox\" id=\"has-footer-").concat(this.editorID, "\">\n          <label for=\"has-footer-").concat(this.editorID, "\">No Footer</label>\n        </span>\n      </span>\n      <button type=\"button\" class=\"ozz-wyg-regular-btn\" id=\"insertTableTrigger-").concat(this.editorID, "\">Insert</button>");
+            settingsDOM.innerHTML = "\n      <input type=\"number\" min=\"1\" max=\"100\" value=\"2\" placeholder=\"X\" id=\"row-".concat(this.editorID, "\">\n      <input type=\"number\" min=\"1\" max=\"100\" value=\"2\" placeholder=\"Y\" id=\"column-").concat(this.editorID, "\">\n      <span class=\"sub-options\">\n        <span>\n          <input type=\"checkbox\" id=\"has-th-").concat(this.editorID, "\">\n          <label for=\"has-th-").concat(this.editorID, "\">No Header</label>\n        </span>\n        <span>\n          <input type=\"checkbox\" id=\"has-footer-").concat(this.editorID, "\">\n          <label for=\"has-footer-").concat(this.editorID, "\">No Footer</label>\n        </span>\n      </span>\n      <button type=\"button\" class=\"ozz-wyg-regular-btn\" id=\"insertTableTrigger-").concat(this.editorID, "\">Insert</button>");
             settingsDOM.classList.toggle('active');
 
             // Insert or update Table
             var insertTableTrigger = settingsDOM.querySelector('#insertTableTrigger-' + this.editorID);
             insertTableTrigger.addEventListener('click', function () {
-              var rows = settingsDOM.querySelector('#row-' + _this12.editorID).value,
-                columns = settingsDOM.querySelector('#column-' + _this12.editorID).value,
-                noHead = settingsDOM.querySelector('#has-th-' + _this12.editorID).checked,
-                noFooter = settingsDOM.querySelector('#has-footer-' + _this12.editorID).checked;
+              var rows = settingsDOM.querySelector('#row-' + _this15.editorID).value,
+                columns = settingsDOM.querySelector('#column-' + _this15.editorID).value,
+                noHead = settingsDOM.querySelector('#has-th-' + _this15.editorID).checked,
+                noFooter = settingsDOM.querySelector('#has-footer-' + _this15.editorID).checked;
               rows = rows > 100 ? 100 : rows;
               columns = columns > 100 ? 100 : columns;
 
@@ -5741,8 +6439,8 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               var tBody = table.createTBody();
               for (var _i = 0; _i < rows; _i++) {
                 var tRows = tBody.insertRow(_i);
-                for (var _i2 = 0; _i2 < columns; _i2++) {
-                  tRows.insertCell(_i2);
+                for (var j = 0; j < columns; j++) {
+                  tRows.insertCell(j);
                 }
               }
 
@@ -5750,8 +6448,8 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               if (noFooter === false) {
                 var tFoot = table.createTFoot();
                 var footRow = tFoot.insertRow();
-                for (var _i3 = 0; _i3 < columns; _i3++) {
-                  footRow.insertCell(_i3);
+                for (var _i2 = 0; _i2 < columns; _i2++) {
+                  footRow.insertCell(_i2);
                 }
               }
 
@@ -5766,7 +6464,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               $table.classList.add('ozz-wyg-table-wrapper');
               $table.innerHTML = table.outerHTML;
               document.execCommand('insertHTML', false, "<br>".concat($table.outerHTML, "<br>"));
-              _this12.tableActions(); // Table Actions
+              _this15.tableActions(); // Table Actions
             });
 
             // Close popup
@@ -5783,9 +6481,14 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "tableActions",
           value: function tableActions() {
-            var _this13 = this;
-            var $table = document.querySelectorAll('.ozz-wyg-table-wrapper');
+            var _this16 = this;
+            var $table = this.playGround.querySelectorAll('.ozz-wyg-table-wrapper');
             $table.forEach(function (tbl) {
+              // Only add listeners if not already added
+              if (tbl.hasAttribute('data-table-handled')) {
+                return;
+              }
+              tbl.setAttribute('data-table-handled', 'true');
               tbl.addEventListener('mouseover', function () {
                 var tblTools = tbl.querySelectorAll('.ozz-wyg-table-actions');
                 if (tblTools.length === 0) {
@@ -5798,19 +6501,20 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                   actions.querySelectorAll('button').forEach(function (btn) {
                     btn.addEventListener('click', function (e) {
                       e.preventDefault();
+                      e.stopPropagation();
                       var action = e.target.getAttribute('data-tbl-action');
                       switch (action) {
                         case 'addrow':
-                          _this13.addTableRow(tbl);
+                          _this16.addTableRow(tbl);
                           break;
                         case 'deleterow':
-                          _this13.deleteTableRow(tbl);
+                          _this16.deleteTableRow(tbl);
                           break;
                         case 'addcol':
-                          _this13.addTableCol(tbl);
+                          _this16.addTableCol(tbl);
                           break;
                         case 'deletecol':
-                          _this13.deleteTableCol(tbl);
+                          _this16.deleteTableCol(tbl);
                           break;
                         default:
                           break;
@@ -5819,9 +6523,12 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                   });
                   tbl.appendChild(actions);
                 }
-                tbl.addEventListener('mouseleave', function () {
-                  tblTools[0] ? tblTools[0].remove() : false;
-                });
+              });
+              tbl.addEventListener('mouseleave', function () {
+                var tblTools = tbl.querySelectorAll('.ozz-wyg-table-actions');
+                if (tblTools.length > 0) {
+                  tblTools[0].remove();
+                }
               });
             });
           }
@@ -5833,10 +6540,11 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "addTableRow",
           value: function addTableRow(table_wrap) {
+            if (!table_wrap) return;
             var tbody = table_wrap.querySelector('tbody');
             if (tbody) {
-              var _tbody$querySelector$, _tbody$querySelector;
-              var cellsCount = (_tbody$querySelector$ = (_tbody$querySelector = tbody.querySelector('tr')) === null || _tbody$querySelector === void 0 || (_tbody$querySelector = _tbody$querySelector.querySelectorAll('td')) === null || _tbody$querySelector === void 0 ? void 0 : _tbody$querySelector.length) !== null && _tbody$querySelector$ !== void 0 ? _tbody$querySelector$ : 1;
+              var firstRow = tbody.querySelector('tr');
+              var cellsCount = firstRow ? firstRow.querySelectorAll('td, th').length : 1;
               var newRow = tbody.insertRow(-1);
               for (var i = 0; i < cellsCount; i++) {
                 var td = document.createElement('td');
@@ -5853,7 +6561,10 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "deleteTableRow",
           value: function deleteTableRow(table_wrap) {
-            var tbody = table_wrap.querySelector('table tbody');
+            if (!table_wrap) return;
+            var table = table_wrap.querySelector('table');
+            if (!table) return;
+            var tbody = table.querySelector('tbody');
             if (tbody && tbody.rows.length > 1) {
               tbody.deleteRow(-1);
             }
@@ -5866,34 +6577,46 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "addTableCol",
           value: function addTableCol(table_wrap) {
+            if (!table_wrap) return;
             var thead = table_wrap.querySelector('thead');
             var tbody = table_wrap.querySelector('tbody');
             var tfoot = table_wrap.querySelector('tfoot');
             var addCellToRows = function addCellToRows(rows, newCellIndex) {
               var type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'td';
+              if (!rows || rows.length === 0) return;
               rows.forEach(function (row) {
                 var td = document.createElement(type);
                 td.innerHTML = '<br>';
-                row.insertBefore(td, row.cells[newCellIndex]);
+                if (newCellIndex < row.cells.length) {
+                  row.insertBefore(td, row.cells[newCellIndex]);
+                } else {
+                  row.appendChild(td);
+                }
               });
             };
             if (thead) {
-              var _headerRows$0$querySe, _headerRows$;
               var headerRows = thead.querySelectorAll('tr');
-              var newCellIndex = (_headerRows$0$querySe = (_headerRows$ = headerRows[0]) === null || _headerRows$ === void 0 || (_headerRows$ = _headerRows$.querySelectorAll('th, td')) === null || _headerRows$ === void 0 ? void 0 : _headerRows$.length) !== null && _headerRows$0$querySe !== void 0 ? _headerRows$0$querySe : 0;
-              addCellToRows(headerRows, newCellIndex, 'th');
+              if (headerRows.length > 0) {
+                var firstRow = headerRows[0];
+                var newCellIndex = firstRow ? firstRow.querySelectorAll('th, td').length : 0;
+                addCellToRows(headerRows, newCellIndex, 'th');
+              }
             }
             if (tbody) {
-              var _bodyRows$0$querySele, _bodyRows$;
               var bodyRows = tbody.querySelectorAll('tr');
-              var _newCellIndex = (_bodyRows$0$querySele = (_bodyRows$ = bodyRows[0]) === null || _bodyRows$ === void 0 || (_bodyRows$ = _bodyRows$.querySelectorAll('td')) === null || _bodyRows$ === void 0 ? void 0 : _bodyRows$.length) !== null && _bodyRows$0$querySele !== void 0 ? _bodyRows$0$querySele : 0;
-              addCellToRows(bodyRows, _newCellIndex);
+              if (bodyRows.length > 0) {
+                var _firstRow = bodyRows[0];
+                var _newCellIndex = _firstRow ? _firstRow.querySelectorAll('td').length : 0;
+                addCellToRows(bodyRows, _newCellIndex);
+              }
             }
             if (tfoot) {
-              var _footerRows$0$querySe, _footerRows$;
               var footerRows = tfoot.querySelectorAll('tr');
-              var _newCellIndex2 = (_footerRows$0$querySe = (_footerRows$ = footerRows[0]) === null || _footerRows$ === void 0 || (_footerRows$ = _footerRows$.querySelectorAll('td')) === null || _footerRows$ === void 0 ? void 0 : _footerRows$.length) !== null && _footerRows$0$querySe !== void 0 ? _footerRows$0$querySe : 0;
-              addCellToRows(footerRows, _newCellIndex2);
+              if (footerRows.length > 0) {
+                var _firstRow2 = footerRows[0];
+                var _newCellIndex2 = _firstRow2 ? _firstRow2.querySelectorAll('td').length : 0;
+                addCellToRows(footerRows, _newCellIndex2);
+              }
             }
           }
 
@@ -5904,15 +6627,20 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "deleteTableCol",
           value: function deleteTableCol(table_wrap) {
+            if (!table_wrap) return;
             var thead = table_wrap.querySelector('thead');
             var tbody = table_wrap.querySelector('tbody');
             var tfoot = table_wrap.querySelector('tfoot');
             var deleteLastCell = function deleteLastCell(rows) {
-              var _rows$;
-              var lastCellIndex = ((_rows$ = rows[0]) === null || _rows$ === void 0 ? void 0 : _rows$.cells.length) - 1;
-              if (lastCellIndex > 0) {
+              if (!rows || rows.length === 0) return;
+              var firstRow = rows[0];
+              if (!firstRow) return;
+              var lastCellIndex = firstRow.cells.length - 1;
+              if (lastCellIndex >= 0) {
                 rows.forEach(function (row) {
-                  row.deleteCell(lastCellIndex);
+                  if (row.cells.length > 1) {
+                    row.deleteCell(lastCellIndex);
+                  }
                 });
               }
             };
@@ -5933,11 +6661,13 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "mediaPopUp",
           value: function mediaPopUp(ev) {
-            var _this14 = this;
+            var _this17 = this;
             var linkCls = 'ozz-wyg__tool-media-',
-              parent = ev.target.closest(".".concat(linkCls, "trigger")),
-              settingsDOM = parent.querySelector(".".concat(linkCls, "setting")),
-              selection = window.getSelection();
+              parent = ev.target.closest(".".concat(linkCls, "trigger"));
+            if (!parent) return;
+            var settingsDOM = parent.querySelector(".".concat(linkCls, "setting"));
+            if (!settingsDOM) return;
+            var selection = window.getSelection();
 
             // Store selection
             var sRange = false;
@@ -5948,15 +6678,15 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             // Get Selected Media element tp update - To Do
             var existingURL = '';
             var existingALT = '';
-            settingsDOM.innerHTML = "\n      <label>Upload:</label> <input form=\"\" type=\"file\" accept=\"image/*,video/*\" id=\"file-".concat(this.editorID, "\" value=\"").concat(existingURL, "\"><br>\n      <label>Media URL:</label> <input form=\"\" type=\"text\" id=\"url-").concat(this.editorID, "\" value=\"").concat(existingURL, "\"><br>\n      <label>Alt:</label> <input form=\"\" type=\"text\" id=\"alt-").concat(this.editorID, "\" value=\"").concat(existingALT, "\"><br>\n      <button type=\"button\" class=\"ozz-wyg-regular-btn\" id=\"insertMediaTrigger-").concat(this.editorID, "\">").concat(existingURL ? 'Update' : 'Insert', "</button>");
+            settingsDOM.innerHTML = "\n      <label>Upload:</label> <input type=\"file\" accept=\"image/*,video/*\" id=\"file-".concat(this.editorID, "\"><br>\n      <label>Media URL:</label> <input type=\"text\" id=\"url-").concat(this.editorID, "\" value=\"").concat(existingURL, "\"><br>\n      <label>Alt:</label> <input type=\"text\" id=\"alt-").concat(this.editorID, "\" value=\"").concat(existingALT, "\"><br>\n      <button type=\"button\" class=\"ozz-wyg-regular-btn\" id=\"insertMediaTrigger-").concat(this.editorID, "\">").concat(existingURL ? 'Update' : 'Insert', "</button>");
             settingsDOM.classList.toggle('active');
 
             // Insert Media
             var insertMediaTrigger = settingsDOM.querySelector('#insertMediaTrigger-' + this.editorID);
             insertMediaTrigger.addEventListener('click', function () {
-              var files = settingsDOM.querySelector('#file-' + _this14.editorID).files;
-              var url = settingsDOM.querySelector('#url-' + _this14.editorID).value;
-              var alt = settingsDOM.querySelector('#alt-' + _this14.editorID).value;
+              var files = settingsDOM.querySelector('#file-' + _this17.editorID).files;
+              var url = settingsDOM.querySelector('#url-' + _this17.editorID).value;
+              var alt = settingsDOM.querySelector('#alt-' + _this17.editorID).value;
               var altText = alt;
               var fileType = 'unknown';
 
@@ -5988,9 +6718,9 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                   fileType = 'image';
                 } else if (['mp4', 'webm', 'ogg', 'avi', 'mov'].includes(fileExt)) {
                   fileType = 'video';
-                } else if (_this14.isYouTubeURL(url)) {
+                } else if (_this17.isYouTubeURL(url)) {
                   fileType = 'youtube';
-                } else if (_this14.isVimeoURL(url)) {
+                } else if (_this17.isVimeoURL(url)) {
                   fileType = 'vimeo';
                 }
                 altText = altText !== '' ? altText : filename;
@@ -6006,9 +6736,9 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               } else if (fileType === 'video') {
                 mediaElement = "<br><div class=\"media-wrapper\"><video src=\"".concat(mediaItem, "\" controls></video></div><br>");
               } else if (fileType === 'youtube') {
-                mediaElement = "<br>".concat(_this14.getYouTubeEmbedCode(mediaItem), "<br>");
+                mediaElement = "<br>".concat(_this17.getYouTubeEmbedCode(mediaItem), "<br>");
               } else if (fileType === 'vimeo') {
-                mediaElement = "<br>".concat(_this14.getVimeoEmbedCode(mediaItem), "<br>");
+                mediaElement = "<br>".concat(_this17.getVimeoEmbedCode(mediaItem), "<br>");
               } else {
                 mediaElement = false;
               }
@@ -6018,7 +6748,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 document.execCommand('insertHTML', false, "<br>".concat(mediaElement, "<br>"));
                 settingsDOM.classList.remove('active'); // Close PopUp
 
-                _this14.mediaPopover(); // Config Media Popover
+                _this17.mediaPopover(); // Config Media Popover
               }
             };
 
@@ -6036,9 +6766,15 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "mediaPopover",
           value: function mediaPopover() {
-            var _this15 = this;
-            var mediaItems = this.editor.querySelectorAll('img, .media-wrapper');
+            var _this18 = this;
+            // Use event delegation to prevent duplicate listeners
+            var mediaItems = this.playGround.querySelectorAll('img, .media-wrapper');
             mediaItems.forEach(function (mediaItem) {
+              // Remove existing click handlers by cloning
+              if (mediaItem.hasAttribute('data-media-handled')) {
+                return;
+              }
+              mediaItem.setAttribute('data-media-handled', 'true');
               mediaItem.addEventListener('click', function (e) {
                 var popoverDOM = document.createElement('div');
                 popoverDOM.setAttribute('contenteditable', false);
@@ -6058,52 +6794,72 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                     options += "<option value=\"".concat(clsName, "\">").concat(i * 5, "%</option>");
                   }
                 }
-                popoverDOM.innerHTML = "\n          <button type=\"button\" title=\"Align Left\" data-media-action=\"align-left\">Align Left</button>\n          <button type=\"button\" title=\"Align Center\" data-media-action=\"align-center\">Align Center</button>\n          <button type=\"button\" title=\"Align Right\" data-media-action=\"align-right\">Align Right</button>\n          <button type=\"button\" title=\"Inline\" data-media-action=\"inline\">Inline</button>\n          <select form=\"\" data-media-action=\"width\">".concat(options, "</select>\n          <button type=\"button\" title=\"Delete\" data-media-action=\"delete\">Delete</button>\n        ");
-                if (_this15.editor.querySelectorAll('.ozz-wyg-media-actions').length === 0) {
-                  mediaItem.insertAdjacentElement('afterend', popoverDOM);
+                popoverDOM.innerHTML = "\n          <button type=\"button\" title=\"Align Left\" data-media-action=\"align-left\">Align Left</button>\n          <button type=\"button\" title=\"Align Center\" data-media-action=\"align-center\">Align Center</button>\n          <button type=\"button\" title=\"Align Right\" data-media-action=\"align-right\">Align Right</button>\n          <button type=\"button\" title=\"Inline\" data-media-action=\"inline\">Inline</button>\n          <select data-media-action=\"width\">".concat(options, "</select>\n          <button type=\"button\" title=\"Delete\" data-media-action=\"delete\">Delete</button>\n        ");
 
-                  // Position popover element
-                  popoverDOM.style.top = "".concat(e.clientY, "px");
-                  popoverDOM.style.left = "".concat(e.clientX, "px");
-
-                  // Media Actions
-                  popoverDOM.querySelectorAll('button, select').forEach(function (actionTrigger) {
-                    if (actionTrigger.tagName === 'SELECT') {
-                      actionTrigger.addEventListener('change', function () {
-                        var _mediaItem$classList;
-                        var action = actionTrigger.value;
-                        (_mediaItem$classList = mediaItem.classList).remove.apply(_mediaItem$classList, _toConsumableArray2(Array.from(mediaItem.classList).filter(function (className) {
-                          return className.startsWith('w-');
-                        })));
-                        if (action !== 'auto') {
-                          mediaItem.classList.add(action);
-                        }
-                      });
-                    } else {
-                      actionTrigger.addEventListener('click', function () {
-                        var action = actionTrigger.getAttribute('data-media-action');
-                        if (action == 'align-left' || action == 'align-right' || action == 'align-center') {
-                          var _mediaItem$classList2;
-                          (_mediaItem$classList2 = mediaItem.classList).remove.apply(_mediaItem$classList2, _toConsumableArray2(Array.from(mediaItem.classList).filter(function (className) {
-                            return className.startsWith('align-');
-                          })));
-                          mediaItem.classList.add(action);
-                        } else if (action == 'inline') {
-                          mediaItem.classList.toggle(action);
-                        } else if (action == 'delete') {
-                          mediaItem.remove();
-                          popoverDOM.remove();
-                        }
-                      });
-                    }
-                  });
+                // Remove any existing popover first
+                var existingPopover = _this18.editor.querySelector('.ozz-wyg-media-actions');
+                if (existingPopover) {
+                  existingPopover.remove();
                 }
+                mediaItem.insertAdjacentElement('afterend', popoverDOM);
+
+                // Position popover element at the click point
+                // Get the editor's position relative to viewport
+                var editorRect = _this18.editor.getBoundingClientRect();
+
+                // Calculate position relative to editor container
+                var relativeX = e.clientX - editorRect.left;
+                var relativeY = e.clientY - editorRect.top;
+
+                // Ensure editor has relative positioning for absolute children
+                var editorPosition = window.getComputedStyle(_this18.editor).position;
+                if (editorPosition === 'static') {
+                  _this18.editor.style.position = 'relative';
+                }
+
+                // Set position relative to editor (not absolute screen coordinates)
+                popoverDOM.style.position = 'absolute';
+                popoverDOM.style.top = "".concat(relativeY, "px");
+                popoverDOM.style.left = "".concat(relativeX, "px");
+                popoverDOM.style.zIndex = '1000';
+
+                // Media Actions
+                popoverDOM.querySelectorAll('button, select').forEach(function (actionTrigger) {
+                  if (actionTrigger.tagName === 'SELECT') {
+                    actionTrigger.addEventListener('change', function () {
+                      var _mediaItem$classList;
+                      var action = actionTrigger.value;
+                      (_mediaItem$classList = mediaItem.classList).remove.apply(_mediaItem$classList, _toConsumableArray2(Array.from(mediaItem.classList).filter(function (className) {
+                        return className.startsWith('w-');
+                      })));
+                      if (action !== 'auto') {
+                        mediaItem.classList.add(action);
+                      }
+                    });
+                  } else {
+                    actionTrigger.addEventListener('click', function () {
+                      var action = actionTrigger.getAttribute('data-media-action');
+                      if (action == 'align-left' || action == 'align-right' || action == 'align-center') {
+                        var _mediaItem$classList2;
+                        (_mediaItem$classList2 = mediaItem.classList).remove.apply(_mediaItem$classList2, _toConsumableArray2(Array.from(mediaItem.classList).filter(function (className) {
+                          return className.startsWith('align-');
+                        })));
+                        mediaItem.classList.add(action);
+                      } else if (action == 'inline') {
+                        mediaItem.classList.toggle(action);
+                      } else if (action == 'delete') {
+                        mediaItem.remove();
+                        popoverDOM.remove();
+                      }
+                    });
+                  }
+                });
 
                 // Close popover
                 var _tempCloseEvent = function tempCloseEvent(ev) {
                   if (!popoverDOM.contains(ev.target) && ev.target !== popoverDOM && ev.target !== mediaItem) {
-                    var _this15$editor$queryS;
-                    (_this15$editor$queryS = _this15.editor.querySelector('.ozz-wyg-media-actions')) === null || _this15$editor$queryS === void 0 || _this15$editor$queryS.remove();
+                    var _this18$editor$queryS;
+                    (_this18$editor$queryS = _this18.editor.querySelector('.ozz-wyg-media-actions')) === null || _this18$editor$queryS === void 0 || _this18$editor$queryS.remove();
                     document.removeEventListener('click', _tempCloseEvent);
                   }
                 };
@@ -6143,7 +6899,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           key: "getYouTubeEmbedCode",
           value: function getYouTubeEmbedCode(url) {
             var videoID = this.extractYouTubeVideoID(url);
-            return "<div class=\"media-wrapper\"><span class=\"height-holder\"></span><iframe src=\"https://www.youtube.com/embed/".concat(videoID, "\" frameborder=\"0\" allowfullscreen></iframe><div>");
+            return "<div class=\"media-wrapper\"><span class=\"height-holder\"></span><iframe src=\"https://www.youtube.com/embed/".concat(videoID, "\" frameborder=\"0\" allowfullscreen></iframe></div>");
           }
 
           /**
@@ -6202,8 +6958,9 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "quoteText",
           value: function quoteText() {
-            var selection = window.getSelection(),
-              quote = '<blockquote><p>' + (selection.toString() == '' ? '<br>' : selection.toString()) + '</p><footer class="blockquote-footer">--Footer, <cite>cite</cite></footer></blockquote><br>';
+            var selection = window.getSelection();
+            var selectedText = selection.toString().trim();
+            var quote = '<blockquote><p>' + (selectedText === '' ? '<br>' : selectedText) + '</p><footer class="blockquote-footer">--Footer, <cite>cite</cite></footer></blockquote><br>';
             document.execCommand('insertHTML', false, quote);
           }
 
@@ -6213,9 +6970,15 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "codeText",
           value: function codeText() {
-            var selection = window.getSelection(),
-              code = '<code>' + selection.toString() + '</code>';
-            document.execCommand('insertHTML', false, code);
+            var selection = window.getSelection();
+            var selectedText = selection.toString();
+            if (selectedText === '') {
+              // If no selection, insert empty code tag
+              document.execCommand('insertHTML', false, '<code></code>');
+            } else {
+              var code = '<code>' + selectedText + '</code>';
+              document.execCommand('insertHTML', false, code);
+            }
           }
 
           /**
@@ -6224,11 +6987,16 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "toggleCodeView",
           value: function toggleCodeView() {
+            var _this19 = this;
             if (this.isHTML()) {
               this.playGround.classList.remove('ozz-wyg-html-view');
-              this.playGround.innerHTML = this.playGround.textContent;
-              this.tableActions(); // Init table Actions
-              this.mediaPopover(); // Config Media Popover
+              // Parse HTML from text content
+              var htmlContent = this.playGround.textContent;
+              this.playGround.innerHTML = htmlContent;
+              // Re-initialize all interactive features after switching back to visual view
+              setTimeout(function () {
+                _this19.initializeContentFeatures();
+              }, 0);
             } else {
               this.playGround.querySelectorAll('[contenteditable="false"]').forEach(function (element) {
                 element.remove();
@@ -6240,14 +7008,274 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
 
           /**
            * Get value from editor
+           * @param {string} editorID - Optional editor ID, if not provided returns first editor's value
            */
         }, {
           key: "getValue",
           value: function getValue() {
-            return this.playGround.innerHTML;
+            var editorID = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+            if (editorID && this.editorInstances.has(editorID)) {
+              return this.editorInstances.get(editorID).playGround.innerHTML;
+            }
+            // Return first editor's value for backward compatibility
+            if (this.editorInstances.size > 0) {
+              var firstInstance = this.editorInstances.values().next().value;
+              return firstInstance.playGround.innerHTML;
+            }
+            return this.playGround ? this.playGround.innerHTML : '';
+          }
+
+          /**
+           * Initialize interactive features for loaded content
+           * This should be called after setting content via setValue or when content is loaded
+           */
+        }, {
+          key: "initializeContentFeatures",
+          value: function initializeContentFeatures() {
+            if (!this.playGround) return;
+
+            // Wrap tables that aren't wrapped yet
+            var tables = this.playGround.querySelectorAll('table');
+            tables.forEach(function (table) {
+              if (!table.closest('.ozz-wyg-table-wrapper')) {
+                var tableWrapped = document.createElement('div');
+                tableWrapped.classList.add('ozz-wyg-table-wrapper');
+                var tableParent = table.parentNode;
+                tableParent.insertBefore(tableWrapped, table);
+                tableWrapped.appendChild(table);
+
+                // Clear inline styles
+                table.removeAttribute('style');
+                var tItems = table.querySelectorAll('tbody, thead, tfoot, tr, td, th');
+                tItems.forEach(function (item) {
+                  item.removeAttribute('style');
+                });
+              }
+            });
+
+            // Remove existing handlers to re-initialize
+            this.playGround.querySelectorAll('[data-link-handled]').forEach(function (el) {
+              el.removeAttribute('data-link-handled');
+            });
+            this.playGround.querySelectorAll('[data-media-handled]').forEach(function (el) {
+              el.removeAttribute('data-media-handled');
+            });
+            this.playGround.querySelectorAll('[data-table-handled]').forEach(function (el) {
+              el.removeAttribute('data-table-handled');
+            });
+
+            // Initialize all interactive features
+            this.mediaPopover();
+            this.tableActions();
+            this.linkPopOver();
+          }
+
+          /**
+           * Set value for editor
+           * @param {string} value - HTML string to set
+           * @param {string|null} editorID - target editor ID; if null and single editor exists, applies to first
+           */
+        }, {
+          key: "setValue",
+          value: function setValue(value) {
+            var _this20 = this;
+            var editorID = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+            if (value === undefined || value === null) return;
+            var targetInstance = null;
+            if (editorID && this.editorInstances.has(editorID)) {
+              targetInstance = this.editorInstances.get(editorID);
+            } else if (this.editorInstances.size === 1) {
+              targetInstance = this.editorInstances.values().next().value;
+            }
+            var playGroundToSet = null;
+            var editorToSet = null;
+            var editorIDToSet = null;
+            if (targetInstance && targetInstance.playGround) {
+              playGroundToSet = targetInstance.playGround;
+              editorToSet = targetInstance.element;
+              editorIDToSet = targetInstance.id;
+            } else if (this.playGround) {
+              playGroundToSet = this.playGround;
+              editorToSet = this.editor;
+              editorIDToSet = this.editorID;
+            }
+            if (playGroundToSet) {
+              // Set the content
+              playGroundToSet.innerHTML = value;
+
+              // Initialize features after DOM update
+              // Use captured values in closure to ensure correct editor instance
+              setTimeout(function () {
+                // Set context for initialization using captured values
+                var originalEditor = _this20.editor;
+                var originalPlayGround = _this20.playGround;
+                var originalEditorID = _this20.editorID;
+                _this20.editor = editorToSet;
+                _this20.playGround = playGroundToSet;
+                _this20.editorID = editorIDToSet;
+                if (editorIDToSet) {
+                  _this20.currentEditorID = editorIDToSet;
+                }
+                _this20.initializeContentFeatures();
+
+                // Restore original context after initialization
+                _this20.editor = originalEditor;
+                _this20.playGround = originalPlayGround;
+                _this20.editorID = originalEditorID;
+              }, 0);
+            }
+          }
+
+          /**
+           * Get editor instance by editor ID
+           * @param {string} editorID - Editor ID
+           * @returns {Object|null} Editor instance or null
+           */
+        }, {
+          key: "getEditorInstance",
+          value: function getEditorInstance(editorID) {
+            return this.editorInstances.get(editorID) || null;
+          }
+
+          /**
+           * Get all editor instances
+           * @returns {Map} Map of all editor instances
+           */
+        }, {
+          key: "getAllEditorInstances",
+          value: function getAllEditorInstances() {
+            return this.editorInstances;
+          }
+
+          /**
+           * Bind event to specific editor instance
+           * @param {string} editorID - Editor ID
+           * @param {string} eventName - Event name (without 'ozzwyg:' prefix)
+           * @param {Function} callback - Event callback function
+           */
+        }, {
+          key: "on",
+          value: function on(editorID, eventName, callback) {
+            var instance = this.getEditorInstance(editorID);
+            if (instance && instance.element) {
+              instance.element.addEventListener("ozzwyg:".concat(eventName), callback);
+            }
+          }
+
+          /**
+           * Unbind event from specific editor instance
+           * @param {string} editorID - Editor ID
+           * @param {string} eventName - Event name (without 'ozzwyg:' prefix)
+           * @param {Function} callback - Event callback function
+           */
+        }, {
+          key: "off",
+          value: function off(editorID, eventName, callback) {
+            var instance = this.getEditorInstance(editorID);
+            if (instance && instance.element) {
+              instance.element.removeEventListener("ozzwyg:".concat(eventName), callback);
+            }
           }
         }]);
-      }(); // Default options for the plugin
+      }();
+      /**
+       * Static method to get OzzWyg instance from DOM element
+       * @param {string|HTMLElement} selector - CSS selector or DOM element
+       * @returns {OzzWyg|null} OzzWyg instance or null
+       */
+      // Static registry to track all editor instances
+      _defineProperty2(OzzWyg, "instances", new Map());
+      OzzWyg.getInstance = function (selector) {
+        var element = null;
+        if (typeof selector === 'string') {
+          element = document.querySelector(selector);
+        } else if (selector instanceof HTMLElement) {
+          element = selector;
+        }
+        if (element) {
+          // Check if element has data-editor attribute
+          var editorID = element.getAttribute('data-editor');
+          if (editorID && OzzWyg.instances.has(editorID)) {
+            return OzzWyg.instances.get(editorID);
+          }
+          // Check if element itself is registered
+          if (OzzWyg.instances.has(element)) {
+            return OzzWyg.instances.get(element);
+          }
+        }
+        return null;
+      };
+
+      /**
+       * Static method to get value from editor by selector
+       * @param {string|HTMLElement} selector - CSS selector or DOM element
+       * @returns {string} Editor content or empty string
+       */
+      OzzWyg.getValue = function (selector) {
+        var instance = OzzWyg.getInstance(selector);
+        if (instance) {
+          var element = typeof selector === 'string' ? document.querySelector(selector) : selector;
+          var editorID = element ? element.getAttribute('data-editor') : null;
+          return instance.getValue(editorID);
+        }
+        return '';
+      };
+
+      /**
+       * Static method to set value for editor by selector or element
+       * @param {string|HTMLElement} selector - CSS selector or DOM element
+       * @param {string} value - HTML string
+       */
+      OzzWyg.setValue = function (selector, value) {
+        var instance = OzzWyg.getInstance(selector);
+        if (instance) {
+          var element = typeof selector === 'string' ? document.querySelector(selector) : selector;
+          var editorID = element ? element.getAttribute('data-editor') : null;
+          instance.setValue(value, editorID);
+        }
+      };
+
+      /**
+       * Static method to bind event to editor by selector
+       * @param {string|HTMLElement} selector - CSS selector or DOM element
+       * @param {string} eventName - Event name (without 'ozzwyg:' prefix)
+       * @param {Function} callback - Event callback function
+       */
+      OzzWyg.on = function (selector, eventName, callback) {
+        var instance = OzzWyg.getInstance(selector);
+        if (instance) {
+          var element = typeof selector === 'string' ? document.querySelector(selector) : selector;
+          var editorID = element ? element.getAttribute('data-editor') : null;
+          if (editorID) {
+            instance.on(editorID, eventName, callback);
+          } else if (element) {
+            // Fallback: bind directly to element
+            element.addEventListener("ozzwyg:".concat(eventName), callback);
+          }
+        }
+      };
+
+      /**
+       * Static method to unbind event from editor by selector
+       * @param {string|HTMLElement} selector - CSS selector or DOM element
+       * @param {string} eventName - Event name (without 'ozzwyg:' prefix)
+       * @param {Function} callback - Event callback function
+       */
+      OzzWyg.off = function (selector, eventName, callback) {
+        var instance = OzzWyg.getInstance(selector);
+        if (instance) {
+          var element = typeof selector === 'string' ? document.querySelector(selector) : selector;
+          var editorID = element ? element.getAttribute('data-editor') : null;
+          if (editorID) {
+            instance.off(editorID, eventName, callback);
+          } else if (element) {
+            // Fallback: unbind directly from element
+            element.removeEventListener("ozzwyg:".concat(eventName), callback);
+          }
+        }
+      };
+
+      // Default options for the plugin
       OzzWyg.defaults = {
         pluginName: 'Ozz Wysiwyg Editor',
         selector: '[data-ozz-wyg]',

@@ -9,10 +9,10 @@ $dark-3: #424247;
 
 $fs-1: 14px;
 
-$icon_dir: '../icons/';
+$icon_dir: './';
 
 @mixin ozz-wyg-icon-btn {
-  font-size: 0 !important;
+  font-size: 0;
   line-height: 1.7rem;
   background-image: url('#{$icon_dir}/tools.svg');
   background-repeat: no-repeat;
@@ -62,6 +62,10 @@ $icon_dir: '../icons/';
       }
       &:hover {
         border: 1px solid $light-3;
+        background-color: $light-2;
+      }
+      &.active {
+        border: 1px solid $light-2;
         background-color: $light-2;
       }
     }
@@ -278,6 +282,7 @@ $icon_dir: '../icons/';
     }
   }
   &__editor-area {
+    overflow-x: auto;
     min-height: 150px;
     padding: 10px;
     border: 1px solid $light-3;

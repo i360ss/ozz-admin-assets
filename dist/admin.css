@@ -47,10 +47,14 @@
   border: 1px solid #ddd;
   background-color: #eee;
 }
+.ozz-wyg__tool button.active {
+  border: 1px solid #eee;
+  background-color: #eee;
+}
 .ozz-wyg__tool:not(.ozz-wyg__tool--headings) button:not(.ozz-wyg-regular-btn) {
-  font-size: 0 !important;
+  font-size: 0;
   line-height: 1.7rem;
-  background-image: url("../icons//tools.svg");
+  background-image: url(".//tools.svg");
   background-repeat: no-repeat;
 }
 .ozz-wyg__tool:not(.ozz-wyg__tool--headings) button[data-action=bold] {
@@ -258,6 +262,7 @@
   padding: 5px 8px;
 }
 .ozz-wyg__editor-area {
+  overflow-x: auto;
   min-height: 150px;
   padding: 10px;
   border: 1px solid #ddd;
@@ -478,9 +483,9 @@
   height: 27px;
   border: 1px solid #ddd;
   outline: none;
-  font-size: 0 !important;
+  font-size: 0;
   line-height: 1.7rem;
-  background-image: url("../icons//tools.svg");
+  background-image: url(".//tools.svg");
   background-repeat: no-repeat;
 }
 .ozz-wyg__editor-area .ozz-wyg-popover .ozz-wyg-editlink {
@@ -509,9 +514,9 @@
   border: 1px solid #ccc;
   background-color: #eee;
   cursor: pointer;
-  font-size: 0 !important;
+  font-size: 0;
   line-height: 1.7rem;
-  background-image: url("../icons//tools.svg");
+  background-image: url(".//tools.svg");
   background-repeat: no-repeat;
 }
 .ozz-wyg__editor-area .ozz-wyg-table-wrapper .ozz-wyg-table-actions__row button:hover, .ozz-wyg__editor-area .ozz-wyg-table-wrapper .ozz-wyg-table-actions__column button:hover {
@@ -550,9 +555,9 @@
   border-radius: 5px;
 }
 .ozz-wyg__editor-area .ozz-wyg-media-actions button {
-  font-size: 0 !important;
+  font-size: 0;
   line-height: 1.7rem;
-  background-image: url("../icons//tools.svg");
+  background-image: url(".//tools.svg");
   background-repeat: no-repeat;
   width: 27px;
   height: 27px;

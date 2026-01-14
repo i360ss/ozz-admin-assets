@@ -15,23 +15,23 @@ $breakpoints: (
 );
 
 // Asset paths
-$font-path: "../fonts/";
-$icon-path: "../icons/";
+$font-path: "./fonts/";
+$icon-path: "./icons/";
 
 // Font families
 @font-face {
   font-family: 'Rubik';
-  src: url('#{$font-path}rubik/Rubik-Regular.ttf') format('truetype');
+  src: url('#{$font-path}Rubik-Regular.ttf') format('truetype');
   font-weight: 300;
 }
 @font-face {
   font-family: 'Rubik-medium';
-  src: url('#{$font-path}rubik/Rubik-Medium.ttf') format('truetype');
+  src: url('#{$font-path}Rubik-Medium.ttf') format('truetype');
   font-weight: 400;
 }
 @font-face {
   font-family: 'Rubik-bold';
-  src: url('#{$font-path}rubik/Rubik-Bold.ttf') format('truetype');
+  src: url('#{$font-path}Rubik-Bold.ttf') format('truetype');
   font-weight: 600;
 }
 

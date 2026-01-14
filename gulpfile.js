@@ -4,49 +4,49 @@ const babel = require('gulp-babel');
 const concat = require('gulp-concat');
 const uglify = require('gulp-uglify');
 const cleanCSS = require('gulp-clean-css');
-const sourcemaps = require('gulp-sourcemaps');
+// const sourcemaps = require('gulp-sourcemaps');
 const webpack = require('webpack-stream');
 
-const dist = `${__dirname}/dist/`;
+const dist = `${__dirname}/admin/`;
 
 function compileSass(src, dest, map) {
     return gulp.src(src, { allowEmpty: true })
-    .pipe(sourcemaps.init())
+    // .pipe(sourcemaps.init())
     .pipe(sass().on('error', sass.logError))
-    .pipe(sourcemaps.write('.', { sourceRoot: map }))
+    // .pipe(sourcemaps.write('.', { sourceRoot: map }))
     .pipe(gulp.dest(dest));
 }
 
 function minifyCSS(src, dest, map) {
     return gulp.src(src, { allowEmpty: true })
-    .pipe(sourcemaps.init())
+    // .pipe(sourcemaps.init())
     .pipe(cleanCSS())
     .pipe(concat(dest))
-    .pipe(sourcemaps.write('.', { sourceRoot: map }))
+    // .pipe(sourcemaps.write('.', { sourceRoot: map }))
     .pipe(gulp.dest(`${dist}`));
 }
 
 function compileJS(src, dest, fileName, map, webpackFile) {
     return gulp.src(src, { allowEmpty: true })
-    .pipe(sourcemaps.init())
+    // .pipe(sourcemaps.init())
     .pipe(webpack(require(webpackFile)))
     .pipe(babel({ presets: ['@babel/preset-env'] }))
     .pipe(concat(fileName))
     .pipe(gulp.dest(dest))
-    .pipe(sourcemaps.write('.', { sourceRoot: map }))
+    // .pipe(sourcemaps.write('.', { sourceRoot: map }))
     .pipe(gulp.dest(dest));
 }
 
 function minifyJS(src, dist, filename, map) {
     return gulp.src(src, { allowEmpty: true })
-    .pipe(sourcemaps.init())
+    // .pipe(sourcemaps.init())
     .pipe(uglify())
     .on('error', function (err) {
         console.log(err.toString());
         this.emit('end');
     }) // Handle errors gracefully
     .pipe(concat(filename))
-    .pipe(sourcemaps.write('.', { sourceRoot: map }))
+    // .pipe(sourcemaps.write('.', { sourceRoot: map }))
     .pipe(gulp.dest(dist));
 }
 

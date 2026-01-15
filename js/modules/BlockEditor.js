@@ -120,8 +120,14 @@ export default () => {
         });
         MediaManagerPopup(draggedItem);
         LinkField();
-        if (typeof OzzWyg === 'function') {
-          new OzzWyg({ selector: '[data-ozz-wyg]' });
+
+        const editors = draggedItem.querySelectorAll('[data-ozz-wyg]');
+        if (editors.length) {
+          editors.forEach(editor => {
+            editor.setAttribute('data-value', '');
+            console.log(editor);
+            new OzzWyg({ selector: editor });
+          });
         }
       }
     });

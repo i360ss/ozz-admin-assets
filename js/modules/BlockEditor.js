@@ -125,7 +125,6 @@ export default () => {
         if (editors.length) {
           editors.forEach(editor => {
             editor.setAttribute('data-value', '');
-            console.log(editor);
             new OzzWyg({ selector: editor });
           });
         }

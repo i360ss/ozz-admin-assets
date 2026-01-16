@@ -8,10 +8,19 @@ export default () => {
   changeTrigger.addEventListener('change', (e) => {
     SetState('theme', e.target.checked ? 'dark' : 'light');
     appBody.setAttribute('data-theme', GetState('theme'));
+
+    // Update OzzWyg editors theme
+    document.querySelectorAll('[data-ozz-wyg')?.forEach(editor => {
+      editor.setAttribute('data-theme', GetState('theme'));
+    });
   });
 
   appBody.setAttribute('data-theme', GetState('theme'));
   if (GetState('theme') == 'dark') {
     changeTrigger.checked = true;
   }
+
+  document.querySelectorAll('[data-ozz-wyg')?.forEach(editor => {
+    editor.setAttribute('data-theme', GetState('theme'));
+  });
 }

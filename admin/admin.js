@@ -334,16 +334,26 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
 
       /* harmony default export */
       var __WEBPACK_DEFAULT_EXPORT__ = function __WEBPACK_DEFAULT_EXPORT__() {
+        var _document$querySelect2;
         var appBody = document.querySelector('body.ozz-cms'),
           changeTrigger = document.getElementById('ozz-color-theme-switcher');
         changeTrigger.addEventListener('change', function (e) {
+          var _document$querySelect;
           (0, _utils_State__WEBPACK_IMPORTED_MODULE_0__.SetState)('theme', e.target.checked ? 'dark' : 'light');
           appBody.setAttribute('data-theme', (0, _utils_State__WEBPACK_IMPORTED_MODULE_0__.GetState)('theme'));
+
+          // Update OzzWyg editors theme
+          (_document$querySelect = document.querySelectorAll('[data-ozz-wyg')) === null || _document$querySelect === void 0 || _document$querySelect.forEach(function (editor) {
+            editor.setAttribute('data-theme', (0, _utils_State__WEBPACK_IMPORTED_MODULE_0__.GetState)('theme'));
+          });
         });
         appBody.setAttribute('data-theme', (0, _utils_State__WEBPACK_IMPORTED_MODULE_0__.GetState)('theme'));
         if ((0, _utils_State__WEBPACK_IMPORTED_MODULE_0__.GetState)('theme') == 'dark') {
           changeTrigger.checked = true;
         }
+        (_document$querySelect2 = document.querySelectorAll('[data-ozz-wyg')) === null || _document$querySelect2 === void 0 || _document$querySelect2.forEach(function (editor) {
+          editor.setAttribute('data-theme', (0, _utils_State__WEBPACK_IMPORTED_MODULE_0__.GetState)('theme'));
+        });
       };
 
       /***/
@@ -1220,7 +1230,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
 
         // Ozz Activate Tab (On post create/edit)
         var activateTab = function activateTab() {
-          var _window$location$hash, _window$location$hash2, _document$querySelect, _document$getElementB;
+          var _window$location$hash, _window$location$hash2, _document$querySelect3, _document$getElementB;
           var tab = ((_window$location$hash = window.location.hash) === null || _window$location$hash === void 0 ? void 0 : _window$location$hash.substring(1)) !== '' ? (_window$location$hash2 = window.location.hash) === null || _window$location$hash2 === void 0 ? void 0 : _window$location$hash2.substring(1) : 'default',
             allTabs = document.querySelectorAll('.post-edit-view__tab'),
             tabMenuItemsBtn = document.querySelectorAll('.ozz-cms .post-edit-view__tab-menu > a > .button');
@@ -1234,7 +1244,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           allTabs.forEach(function (thisTab) {
             thisTab.classList.remove('active');
           });
-          (_document$querySelect = document.querySelector(".ozz-cms .post-edit-view__tab-menu > a > .button.".concat(tab))) === null || _document$querySelect === void 0 || _document$querySelect.classList.add('active');
+          (_document$querySelect3 = document.querySelector(".ozz-cms .post-edit-view__tab-menu > a > .button.".concat(tab))) === null || _document$querySelect3 === void 0 || _document$querySelect3.classList.add('active');
           (_document$getElementB = document.getElementById("tab_id-".concat(tab))) === null || _document$getElementB === void 0 || _document$getElementB.classList.add('active');
         };
         var ozzFocusErrorTab = function ozzFocusErrorTab() {

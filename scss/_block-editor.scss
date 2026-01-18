@@ -53,7 +53,6 @@
       width: calc(100% - 240px);
       grid-template-columns: 1fr 40px;
       padding-top: 10px;
-      z-index: 899;
       .ozz-block-editor-expand-button {
         background-position: -148px -79px;
       }
@@ -71,6 +70,9 @@
       &__block-picker-content {
         top: 78px;
       }
+    }
+    .ozz-wyg__toolbar {
+      top: -20px;
     }
     &.collapsed {
       width: calc(100% - 46px);

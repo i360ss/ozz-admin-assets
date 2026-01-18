@@ -3461,7 +3461,6 @@ body.nav-collapsed .cms-global-search__result {
   width: calc(100% - 240px);
   grid-template-columns: 1fr 40px;
   padding-top: 10px;
-  z-index: 899;
 }
 .ozz-block-editor-wrapper.expanded .ozz-block-editor-head .ozz-block-editor-expand-button {
   background-position: -148px -79px;
@@ -3479,6 +3478,9 @@ body.nav-collapsed .cms-global-search__result {
 }
 .ozz-block-editor-wrapper.expanded .ozz-block-editor__block-picker-content {
   top: 78px;
+}
+.ozz-block-editor-wrapper.expanded .ozz-wyg__toolbar {
+  top: -20px;
 }
 .ozz-block-editor-wrapper.expanded.collapsed {
   width: calc(100% - 46px);

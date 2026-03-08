@@ -1313,6 +1313,8 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }
         /* harmony export */
       });
+      /* harmony import */
+      var _vendor_ozz_wyg__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vendor/ozz-wyg */"./js/vendor/ozz-wyg.js");
       var RepeaterField = /*#__PURE__*/function () {
         function RepeaterField() {
           _classCallCheck(this, RepeaterField);
@@ -1394,6 +1396,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             var addItemTrigger = DOM ? DOM.querySelectorAll('.ozz-fm__repeat-add') : document.querySelectorAll('.ozz-fm__repeat-add');
             addItemTrigger.forEach(function (addTrigger) {
               addTrigger.addEventListener('click', function (e) {
+                var _newItem$querySelecto, _newItem$querySelecto2;
                 var thisRepeater = e.target.closest('.ozz-fm__repeat'),
                   thisWrapper = thisRepeater.querySelector(':scope > .ozz-fm__repeat-wrapper'),
                   thisItemCount = thisWrapper.querySelectorAll(':scope > .ozz-fm__repeat-fields'),
@@ -1404,7 +1407,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 newItem.setAttribute('id', "rptf-".concat(_this5.randomString(18)));
 
                 // Clear values and modify repeater item
-                var itemFields = newItem.querySelectorAll('input, textarea, button, progress, meter, select, datalist');
+                var itemFields = newItem.querySelectorAll('input, textarea, button, progress, meter, select, datalist, [data-ozz-wyg]');
                 itemFields.forEach(function (elm) {
                   if (elm.tagName === 'INPUT' || elm.tagName === 'TEXTAREA') {
                     elm.value = '';
@@ -1413,8 +1416,13 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                   }
                   if (thisRepeater.classList.contains('single') === false) {
                     itemFields.forEach(function (elm) {
-                      var newName = elm.name.replace(/__\d+__(?=[^__]*$)/, "__".concat(thisItemCount.length, "__"));
-                      elm.name = newName;
+                      if (elm.name) {
+                        var newName = elm.name.replace(/__\d+__(?=[^__]*$)/, "__".concat(thisItemCount.length, "__"));
+                        elm.name = newName;
+                      } else if (elm.dataset.fieldName) {
+                        var newDataAttr = elm.dataset.fieldName.replace(/__\d+__(?=[^__]*$)/, "__".concat(thisItemCount.length, "__"));
+                        elm.setAttribute('data-field-name', newDataAttr);
+                      }
                     });
                   }
 
@@ -1432,6 +1440,10 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 // Clear and re-init Wysiwyg editors
                 _this5.repeater__clearAndInitOzzWyg(newItem);
                 newItem.querySelector('.ozz-fm__repeat-number').innerHTML = thisItemCount.length + 1;
+                var titleEl = newItem.querySelector('.ozz-fm__repeat-title');
+                if (titleEl) titleEl.innerHTML = '';
+                (_newItem$querySelecto = newItem.querySelector('.ozz-fm__repeat-head')) === null || _newItem$querySelecto === void 0 || _newItem$querySelecto.classList.remove('close');
+                (_newItem$querySelecto2 = newItem.querySelector('.ozz-fm__repeat-body')) === null || _newItem$querySelecto2 === void 0 || _newItem$querySelecto2.classList.remove('close');
 
                 // Init for child repeaters of clone
                 _this5.repeater__addItem(newItem, bindEvents);
@@ -1522,13 +1534,13 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           key: "repeater__clearAndInitOzzWyg",
           value: function repeater__clearAndInitOzzWyg() {
             var DOM = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-            if (typeof OzzWyg === 'function') {
+            if (typeof _vendor_ozz_wyg__WEBPACK_IMPORTED_MODULE_0__["default"] === 'function') {
               var editors = DOM === false ? document.querySelectorAll('[data-ozz-wyg]') : DOM.querySelectorAll('[data-ozz-wyg]');
               editors.forEach(function (editor) {
                 var id = "i-".concat(Math.random().toString(36).substring(2, 6 + 2));
                 editor.innerHTML = '';
                 editor.setAttribute('data-editor', id);
-                new OzzWyg({
+                new _vendor_ozz_wyg__WEBPACK_IMPORTED_MODULE_0__["default"]({
                   selector: editor
                 });
               });

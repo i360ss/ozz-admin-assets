@@ -285,6 +285,13 @@ body.ozz-cms[data-theme="dark"]{
     }
     &__repeat {
       border-color: color(silver-10);
+      &-fields {
+        &:hover {
+          .ozz-fm__repeat-head {
+            background-color: color(primary-10);
+          }
+        }
+      }
     }
     &__repeat-top {
       @include dark-skin-2;

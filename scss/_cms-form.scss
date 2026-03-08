@@ -171,7 +171,7 @@
       display: flex;
       flex-direction: row;
       justify-content: space-between;
-      padding: 4px;
+      padding: 10px 10px 8px 10px;
       margin: -4px 0 0 -4px;
       width: calc(100% + 7px);
       background-color: color(light1);
@@ -184,19 +184,24 @@
       padding-left: 10px;
       border-radius: 5px 0 0 0;
       min-width: 150px;
+      &:hover {
+        .ozz-fm__repeat-head {
+          background: color(primary-dark-10);
+        }
+      }
     }
     &-head {
       position: relative;
       width: calc(100% + 17px);
       margin: 0 0 5px -14px;
-      height: 34px;
+      height: 45px;
       background: color(light2);
       cursor: move;
       &:before,
       &:after {
         position: absolute;
         content: '';
-        top: 3px;
+        top: 9px;
         width: 20px;
         height: 29px;
         @include icon-sprite;
@@ -226,22 +231,32 @@
     }
     &-remove {
       position: absolute;
-      right: 3px;
-      top: 3px;
+      right: 8px;
+      top: 9px;
+    }
+    &-title {
+      height: 45px;
+      display: block;
+      margin-left: 80px;
+      line-height: 3;
+      width: calc(100% - 220px);
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
     &-label {
       margin-bottom: 6px;
       padding: 0 6px;
       font-size: $font-small-3;
       font-family: $rub-m;
-      color: color(primary);
     }
     &-number {
       position: absolute;
-      right: 70px;
-      top: 0;
+      right: 78px;
+      top: 6px;
       padding: 7px 4px;
-      height: 34px;
+      height: 45px;
       font-family: $rub;
       color: color(dark1);
       text-align: right;
@@ -254,13 +269,21 @@
     // Single repeater
     &.single {
       width: calc(100% - 2px);
+      padding: 8px 3px 4px 4px;
       .ozz-fm__repeat {
+        &-number {
+          top: 0;
+        }
+        &-remove {
+          top: 4px;
+          right: 4px;
+        }
         &-fields {
           position: relative;
           padding: 0 0 10px;
           margin-bottom: 10px;
           &:not(:last-of-type) {
-            border-bottom: 1px solid color(gray2-50);
+            border-bottom: 1px solid color(gray2-10);
           }
           &-field {
             max-width: calc(100% - 130px);

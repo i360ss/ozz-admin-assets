@@ -1,3 +1,5 @@
+import OzzWyg from '../vendor/ozz-wyg';
+
 class RepeaterField {
 
   /**
@@ -69,7 +71,7 @@ class RepeaterField {
         newItem.setAttribute('id', `rptf-${this.randomString(18)}`);
 
         // Clear values and modify repeater item
-        const itemFields = newItem.querySelectorAll('input, textarea, button, progress, meter, select, datalist');
+        const itemFields = newItem.querySelectorAll('input, textarea, button, progress, meter, select, datalist, [data-ozz-wyg]');
         itemFields.forEach(elm => {
           if (elm.tagName === 'INPUT' || elm.tagName === 'TEXTAREA') {
             elm.value = '';
@@ -79,8 +81,13 @@ class RepeaterField {
 
           if (thisRepeater.classList.contains('single') === false) {
             itemFields.forEach(elm => {
-              const newName = elm.name.replace(/__\d+__(?=[^__]*$)/, `__${thisItemCount.length}__`);
-              elm.name = newName;
+              if (elm.name) {
+                const newName = elm.name.replace(/__\d+__(?=[^__]*$)/, `__${thisItemCount.length}__`);
+                elm.name = newName;
+              } else if (elm.dataset.fieldName) {
+                const newDataAttr = elm.dataset.fieldName.replace(/__\d+__(?=[^__]*$)/, `__${thisItemCount.length}__`);
+                elm.setAttribute('data-field-name', newDataAttr);
+              }
             });
           }
 
@@ -99,6 +106,10 @@ class RepeaterField {
         this.repeater__clearAndInitOzzWyg(newItem);
 
         newItem.querySelector('.ozz-fm__repeat-number').innerHTML = thisItemCount.length + 1;
+        const titleEl = newItem.querySelector('.ozz-fm__repeat-title');
+        if (titleEl) titleEl.innerHTML = '';
+        newItem.querySelector('.ozz-fm__repeat-head')?.classList.remove('close');
+        newItem.querySelector('.ozz-fm__repeat-body')?.classList.remove('close');
 
         // Init for child repeaters of clone
         this.repeater__addItem(newItem, bindEvents);

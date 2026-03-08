@@ -1710,7 +1710,7 @@ header .container ul li a {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  padding: 4px;
+  padding: 10px 10px 8px 10px;
   margin: -4px 0 0 -4px;
   width: calc(100% + 7px);
   background-color: var(--oz-light1);
@@ -1724,18 +1724,21 @@ header .container ul li a {
   border-radius: 5px 0 0 0;
   min-width: 150px;
 }
+.ozz-fm__repeat-fields:hover .ozz-fm__repeat-head {
+  background: var(--oz-primary-dark-10);
+}
 .ozz-fm__repeat-head {
   position: relative;
   width: calc(100% + 17px);
   margin: 0 0 5px -14px;
-  height: 34px;
+  height: 45px;
   background: var(--oz-light2);
   cursor: move;
 }
 .ozz-fm__repeat-head:before, .ozz-fm__repeat-head:after {
   position: absolute;
   content: "";
-  top: 3px;
+  top: 9px;
   width: 20px;
   height: 29px;
   background-image: url("./icons/icons.svg");
@@ -1764,22 +1767,32 @@ header .container ul li a {
 }
 .ozz-fm__repeat-remove {
   position: absolute;
-  right: 3px;
-  top: 3px;
+  right: 8px;
+  top: 9px;
+}
+.ozz-fm__repeat-title {
+  height: 45px;
+  display: block;
+  margin-left: 80px;
+  line-height: 3;
+  width: calc(100% - 220px);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .ozz-fm__repeat-label {
   margin-bottom: 6px;
   padding: 0 6px;
   font-size: 15px;
   font-family: "Rubik-medium", sans-serif;
-  color: var(--oz-primary);
 }
 .ozz-fm__repeat-number {
   position: absolute;
-  right: 70px;
-  top: 0;
+  right: 78px;
+  top: 6px;
   padding: 7px 4px;
-  height: 34px;
+  height: 45px;
   font-family: "Rubik", sans-serif;
   color: var(--oz-dark1);
   text-align: right;
@@ -1790,6 +1803,14 @@ header .container ul li a {
 }
 .ozz-fm__repeat.single {
   width: calc(100% - 2px);
+  padding: 8px 3px 4px 4px;
+}
+.ozz-fm__repeat.single .ozz-fm__repeat-number {
+  top: 0;
+}
+.ozz-fm__repeat.single .ozz-fm__repeat-remove {
+  top: 4px;
+  right: 4px;
 }
 .ozz-fm__repeat.single .ozz-fm__repeat-fields {
   position: relative;
@@ -1797,7 +1818,7 @@ header .container ul li a {
   margin-bottom: 10px;
 }
 .ozz-fm__repeat.single .ozz-fm__repeat-fields:not(:last-of-type) {
-  border-bottom: 1px solid var(--oz-gray2-50);
+  border-bottom: 1px solid var(--oz-gray2-10);
 }
 .ozz-fm__repeat.single .ozz-fm__repeat-fields-field {
   max-width: calc(100% - 130px);
@@ -4356,6 +4377,9 @@ body.ozz-cms[data-theme=dark] .ozz-fm input[type=checkbox].switch:checked {
 }
 body.ozz-cms[data-theme=dark] .ozz-fm__repeat {
   border-color: var(--oz-silver-10);
+}
+body.ozz-cms[data-theme=dark] .ozz-fm__repeat-fields:hover .ozz-fm__repeat-head {
+  background-color: var(--oz-primary-10);
 }
 body.ozz-cms[data-theme=dark] .ozz-fm__repeat-top {
   background: var(--oz-dark2);

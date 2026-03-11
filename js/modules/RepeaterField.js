@@ -50,6 +50,15 @@ class RepeaterField {
           this.toggleClass(thisHead, 'close');
         })
       }
+
+      // Update repeater title when field input
+      const thisRepeater = thisHead.closest('.ozz-fm__repeat-fields');
+      const firstField = thisRepeater.querySelector('input[type="text"], input[type="email"], textarea, select');
+      if (firstField && thisHead.querySelector('.ozz-fm__repeat-title')) {
+        firstField.addEventListener('input', (e) => {
+          thisHead.querySelector('.ozz-fm__repeat-title').textContent = e.target.value;
+        });
+      }
     });
   }
 
@@ -141,18 +150,20 @@ class RepeaterField {
       deleteItem.addEventListener('click', (e) => {
         e.preventDefault();
         // Confirmation popup should be here
+        const itemName = deleteItem.closest('.ozz-fm__repeat-head')?.querySelector('.ozz-fm__repeat-title')?.textContent;
+        if (confirm(`Are you sure you want to delete this item? \n\n ${itemName}`)) {
+          // Delete Item
+          const
+            thisFieldsetWrapper = deleteItem.closest('.ozz-fm__repeat-wrapper'),
+            thisFields = thisFieldsetWrapper?.querySelectorAll(':scope > .ozz-fm__repeat-fields');
 
-        // Delete Item
-        const
-          thisFieldsetWrapper = deleteItem.closest('.ozz-fm__repeat-wrapper'),
-          thisFields = thisFieldsetWrapper?.querySelectorAll(':scope > .ozz-fm__repeat-fields');
-
-        if (thisFields && thisFields.length > 1) {
-          deleteItem.closest('.ozz-fm__repeat-fields').remove();
-          this.repeater__renameFields();
-        } else {
-          deleteItem.setAttribute('disabled', true);
-          return false;
+          if (thisFields && thisFields.length > 1) {
+            deleteItem.closest('.ozz-fm__repeat-fields').remove();
+            this.repeater__renameFields();
+          } else {
+            deleteItem.setAttribute('disabled', true);
+            return false;
+          }
         }
       });
     });
@@ -184,10 +195,15 @@ class RepeaterField {
 
           if (isSingle === false) {
             // Rename field names
-            const itemFields = fieldSet.querySelectorAll('input, textarea, button, progress, meter, select, datalist');
+            const itemFields = fieldSet.querySelectorAll('input, textarea, button, progress, meter, select, datalist, [data-ozz-wyg]');
             itemFields.forEach(elm => {
-              const newName = elm.name.replace(new RegExp(`${rptNameOnly}__\\d+__`), `${rptNameOnly}__${i}__`);
-              elm.name = newName;
+              if (elm.name) {
+                const newName = elm.name.replace(new RegExp(`${rptNameOnly}__\\d+__`), `${rptNameOnly}__${i}__`);
+                elm.name = newName;
+              } else if (elm.dataset.fieldName) {
+                const newDataAttr = elm.dataset.fieldName.replace(new RegExp(`${rptNameOnly}__\\d+__`), `${rptNameOnly}__${i}__`);
+                elm.setAttribute('data-field-name', newDataAttr);
+              }
             });
           }
         }

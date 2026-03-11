@@ -430,6 +430,18 @@ body.ozz-cms[data-theme="dark"]{
   }
   // Media Popup
   .ozz-media-popup {
+    &__breadcrumb {
+      background: var(--oz-dark-70);
+      span {
+        color: color(gray1);
+        &:hover {
+          color: color(white);
+        }
+        &.home {
+          filter: saturate(0) invert(1);
+        }
+      }
+    }
     &__thumbnail {
       border-color: color(dark2);
     }

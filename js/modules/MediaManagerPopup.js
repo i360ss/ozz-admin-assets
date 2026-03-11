@@ -4,6 +4,7 @@ export default (DOM=false) => {
   if (document.querySelectorAll('.ozz-fm__media-selector').length == 0) { return; }
 
   let initialTrigger = false; // Popup opened by this
+  let currentDir = ''; // current folder
 
   /**
    * Build Media manager and popup
@@ -92,11 +93,13 @@ export default (DOM=false) => {
     <div class="ozz-media-popup">
       ${breadCrumbDOM.outerHTML}
       <div class="ozz-media-popup__grid-wrap"><div class="ozz-media-popup__grid">${itemsDOM}</div></div>
+      ${media.items.paginationDOM}
       <div class="ozz-media-popup__submit"><span class="button small">Select</span></div>
     </div>`;
 
     // Open Media Selector popup
     openPopup(wrapperDOM, (DOM) => {
+      currentDir = '';
       const thumbs = DOM.querySelectorAll('.ozz-media-popup__thumbnail');
       const submitBtn = DOM.querySelector('.ozz-media-popup__submit');
       const links= DOM.querySelectorAll('.ozz-media-popup__breadcrumb-item');
@@ -137,6 +140,7 @@ export default (DOM=false) => {
         );
         const finalValues = JSON.stringify( finalVals );
         actualField.value = finalValues;
+        currentDir = '';
         closePopup();
 
         // Update selected media
@@ -148,6 +152,19 @@ export default (DOM=false) => {
         link.addEventListener( 'click', (e) => {
           return loadMedia(e, e.target.getAttribute( 'data-dir' ));
         } );
+      });
+
+      // Pagination
+      DOM.querySelectorAll('.pagination button')?.forEach(button => {
+        const changePage = async (e) => {
+          e.preventDefault();
+          const response = await fetch(`${DATA.CMS_URL}media/items?dir=${currentDir}&p=${button.textContent}`);
+          const media = await response.json();
+          BuildMediaManager(media);
+        };
+
+        button?.addEventListener('click', changePage);
+        button.closest('a')?.addEventListener('click', changePage);
       });
     });
   }
@@ -191,6 +208,7 @@ export default (DOM=false) => {
 
   const loadMedia = async (e, dir=false) => {
     if (dir) {
+      currentDir = dir;
       const response = await fetch(`${DATA.CMS_URL}media/items?dir=${dir}`);
       const media = await response.json();
       BuildMediaManager(media, false, dir);

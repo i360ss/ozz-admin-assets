@@ -710,6 +710,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           return;
         }
         var initialTrigger = false; // Popup opened by this
+        var currentDir = ''; // current folder
 
         /**
          * Build Media manager and popup
@@ -717,7 +718,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
          * @param {object} trigger Selector Trigger clicked event
          * @param {string} breadCrumb Directory URL
          */
-        var BuildMediaManager = function BuildMediaManager(media) {
+        var _BuildMediaManager = function BuildMediaManager(media) {
           var _initialTrigger$targe;
           var trigger = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
           var breadCrumb = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
@@ -771,9 +772,9 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 url: val.url,
                 name: val.name
               }));
-              var _ref13 = '',
-                checked = _ref13.checked,
-                active = _ref13.active;
+              var _ref14 = '',
+                checked = _ref14.checked,
+                active = _ref14.active;
               if (currentValues) {
                 currentValues.forEach(function (item) {
                   if (item.url == val.url) {
@@ -790,10 +791,12 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           for (var key in media.items.data) {
             _loop();
           }
-          var wrapperDOM = "\n    <div class=\"ozz-media-popup\">\n      ".concat(breadCrumbDOM.outerHTML, "\n      <div class=\"ozz-media-popup__grid-wrap\"><div class=\"ozz-media-popup__grid\">").concat(itemsDOM, "</div></div>\n      <div class=\"ozz-media-popup__submit\"><span class=\"button small\">Select</span></div>\n    </div>");
+          var wrapperDOM = "\n    <div class=\"ozz-media-popup\">\n      ".concat(breadCrumbDOM.outerHTML, "\n      <div class=\"ozz-media-popup__grid-wrap\"><div class=\"ozz-media-popup__grid\">").concat(itemsDOM, "</div></div>\n      ").concat(media.items.paginationDOM, "\n      <div class=\"ozz-media-popup__submit\"><span class=\"button small\">Select</span></div>\n    </div>");
 
           // Open Media Selector popup
           (0, _utils_Popup__WEBPACK_IMPORTED_MODULE_0__.openPopup)(wrapperDOM, function (DOM) {
+            var _DOM$querySelectorAll;
+            currentDir = '';
             var thumbs = DOM.querySelectorAll('.ozz-media-popup__thumbnail');
             var submitBtn = DOM.querySelector('.ozz-media-popup__submit');
             var links = DOM.querySelectorAll('.ozz-media-popup__breadcrumb-item');
@@ -838,6 +841,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               });
               var finalValues = JSON.stringify(finalVals);
               actualField.value = finalValues;
+              currentDir = '';
               (0, _utils_Popup__WEBPACK_IMPORTED_MODULE_0__.closePopup)();
 
               // Update selected media
@@ -851,6 +855,39 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               link.addEventListener('click', function (e) {
                 return loadMedia(e, e.target.getAttribute('data-dir'));
               });
+            });
+
+            // Pagination
+            (_DOM$querySelectorAll = DOM.querySelectorAll('.pagination button')) === null || _DOM$querySelectorAll === void 0 || _DOM$querySelectorAll.forEach(function (button) {
+              var _button$closest;
+              var changePage = /*#__PURE__*/function () {
+                var _ref13 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee(e) {
+                  var response, media;
+                  return _regeneratorRuntime().wrap(function _callee$(_context) {
+                    while (1) switch (_context.prev = _context.next) {
+                      case 0:
+                        e.preventDefault();
+                        _context.next = 3;
+                        return fetch("".concat(DATA.CMS_URL, "media/items?dir=").concat(currentDir, "&p=").concat(button.textContent));
+                      case 3:
+                        response = _context.sent;
+                        _context.next = 6;
+                        return response.json();
+                      case 6:
+                        media = _context.sent;
+                        _BuildMediaManager(media);
+                      case 8:
+                      case "end":
+                        return _context.stop();
+                    }
+                  }, _callee);
+                }));
+                return function changePage(_x) {
+                  return _ref13.apply(this, arguments);
+                };
+              }();
+              button === null || button === void 0 || button.addEventListener('click', changePage);
+              (_button$closest = button.closest('a')) === null || _button$closest === void 0 || _button$closest.addEventListener('click', changePage);
             });
           });
         };
@@ -888,50 +925,51 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         DOM = DOM !== false ? DOM : document;
         var selectors = DOM.querySelectorAll('.ozz-fm__media-selector .media-selector-trigger');
         var loadMedia = /*#__PURE__*/function () {
-          var _ref14 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee(e) {
+          var _ref15 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee2(e) {
             var dir,
               response,
               media,
               _response,
               _media,
-              _args = arguments;
-            return _regeneratorRuntime().wrap(function _callee$(_context) {
-              while (1) switch (_context.prev = _context.next) {
+              _args2 = arguments;
+            return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+              while (1) switch (_context2.prev = _context2.next) {
                 case 0:
-                  dir = _args.length > 1 && _args[1] !== undefined ? _args[1] : false;
+                  dir = _args2.length > 1 && _args2[1] !== undefined ? _args2[1] : false;
                   if (!dir) {
-                    _context.next = 11;
+                    _context2.next = 12;
                     break;
                   }
-                  _context.next = 4;
+                  currentDir = dir;
+                  _context2.next = 5;
                   return fetch("".concat(DATA.CMS_URL, "media/items?dir=").concat(dir));
-                case 4:
-                  response = _context.sent;
-                  _context.next = 7;
+                case 5:
+                  response = _context2.sent;
+                  _context2.next = 8;
                   return response.json();
-                case 7:
-                  media = _context.sent;
-                  BuildMediaManager(media, false, dir);
-                  _context.next = 18;
+                case 8:
+                  media = _context2.sent;
+                  _BuildMediaManager(media, false, dir);
+                  _context2.next = 19;
                   break;
-                case 11:
-                  _context.next = 13;
+                case 12:
+                  _context2.next = 14;
                   return fetch("".concat(DATA.CMS_URL, "media/items"));
-                case 13:
-                  _response = _context.sent;
-                  _context.next = 16;
+                case 14:
+                  _response = _context2.sent;
+                  _context2.next = 17;
                   return _response.json();
-                case 16:
-                  _media = _context.sent;
-                  BuildMediaManager(_media, e);
-                case 18:
+                case 17:
+                  _media = _context2.sent;
+                  _BuildMediaManager(_media, e);
+                case 19:
                 case "end":
-                  return _context.stop();
+                  return _context2.stop();
               }
-            }, _callee);
+            }, _callee2);
           }));
-          return function loadMedia(_x) {
-            return _ref14.apply(this, arguments);
+          return function loadMedia(_x2) {
+            return _ref15.apply(this, arguments);
           };
         }();
         selectors.forEach(function (mediaSelector) {
@@ -1382,6 +1420,15 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                   _this4.toggleClass(thisHead, 'close');
                 });
               }
+
+              // Update repeater title when field input
+              var thisRepeater = thisHead.closest('.ozz-fm__repeat-fields');
+              var firstField = thisRepeater.querySelector('input[type="text"], input[type="email"], textarea, select');
+              if (firstField && thisHead.querySelector('.ozz-fm__repeat-title')) {
+                firstField.addEventListener('input', function (e) {
+                  thisHead.querySelector('.ozz-fm__repeat-title').textContent = e.target.value;
+                });
+              }
             });
           }
 
@@ -1476,18 +1523,21 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             var deleteItemTrigger = DOM ? DOM.querySelectorAll('.ozz-fm__repeat-remove') : document.querySelectorAll('.ozz-fm__repeat-remove');
             deleteItemTrigger.forEach(function (deleteItem) {
               deleteItem.addEventListener('click', function (e) {
+                var _deleteItem$closest;
                 e.preventDefault();
                 // Confirmation popup should be here
-
-                // Delete Item
-                var thisFieldsetWrapper = deleteItem.closest('.ozz-fm__repeat-wrapper'),
-                  thisFields = thisFieldsetWrapper === null || thisFieldsetWrapper === void 0 ? void 0 : thisFieldsetWrapper.querySelectorAll(':scope > .ozz-fm__repeat-fields');
-                if (thisFields && thisFields.length > 1) {
-                  deleteItem.closest('.ozz-fm__repeat-fields').remove();
-                  _this6.repeater__renameFields();
-                } else {
-                  deleteItem.setAttribute('disabled', true);
-                  return false;
+                var itemName = (_deleteItem$closest = deleteItem.closest('.ozz-fm__repeat-head')) === null || _deleteItem$closest === void 0 || (_deleteItem$closest = _deleteItem$closest.querySelector('.ozz-fm__repeat-title')) === null || _deleteItem$closest === void 0 ? void 0 : _deleteItem$closest.textContent;
+                if (confirm("Are you sure you want to delete this item? \n\n ".concat(itemName))) {
+                  // Delete Item
+                  var thisFieldsetWrapper = deleteItem.closest('.ozz-fm__repeat-wrapper'),
+                    thisFields = thisFieldsetWrapper === null || thisFieldsetWrapper === void 0 ? void 0 : thisFieldsetWrapper.querySelectorAll(':scope > .ozz-fm__repeat-fields');
+                  if (thisFields && thisFields.length > 1) {
+                    deleteItem.closest('.ozz-fm__repeat-fields').remove();
+                    _this6.repeater__renameFields();
+                  } else {
+                    deleteItem.setAttribute('disabled', true);
+                    return false;
+                  }
                 }
               });
             });
@@ -1516,10 +1566,15 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                   }
                   if (isSingle === false) {
                     // Rename field names
-                    var itemFields = fieldSet.querySelectorAll('input, textarea, button, progress, meter, select, datalist');
+                    var itemFields = fieldSet.querySelectorAll('input, textarea, button, progress, meter, select, datalist, [data-ozz-wyg]');
                     itemFields.forEach(function (elm) {
-                      var newName = elm.name.replace(new RegExp("".concat(rptNameOnly, "__\\d+__")), "".concat(rptNameOnly, "__").concat(i, "__"));
-                      elm.name = newName;
+                      if (elm.name) {
+                        var newName = elm.name.replace(new RegExp("".concat(rptNameOnly, "__\\d+__")), "".concat(rptNameOnly, "__").concat(i, "__"));
+                        elm.name = newName;
+                      } else if (elm.dataset.fieldName) {
+                        var newDataAttr = elm.dataset.fieldName.replace(new RegExp("".concat(rptNameOnly, "__\\d+__")), "".concat(rptNameOnly, "__").concat(i, "__"));
+                        elm.setAttribute('data-field-name', newDataAttr);
+                      }
                     });
                   }
                 }
@@ -5445,12 +5500,12 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           this.editorInstances = new Map();
           if (this.editors) {
             this.editors.forEach(function (editor) {
-              var _ref15, _ref16;
+              var _ref16, _ref17;
               var editorID = "i-".concat(_this7.randomId());
               editor.setAttribute('data-editor', editorID);
 
               // Capture initial content before we overwrite the DOM
-              var initialContent = (_ref15 = (_ref16 = typeof _this7.options.value === 'string' ? _this7.options.value : null) !== null && _ref16 !== void 0 ? _ref16 : editor.getAttribute('data-value')) !== null && _ref15 !== void 0 ? _ref15 : editor.innerHTML;
+              var initialContent = (_ref16 = (_ref17 = typeof _this7.options.value === 'string' ? _this7.options.value : null) !== null && _ref17 !== void 0 ? _ref17 : editor.getAttribute('data-value')) !== null && _ref16 !== void 0 ? _ref16 : editor.innerHTML;
               var instance = {
                 id: editorID,
                 element: editor,

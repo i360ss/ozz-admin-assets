@@ -15,6 +15,7 @@ import InitOzzWyg from './modules/InitOzzWyg';
 import LinkField from './modules/LinkField';
 import Taxonomy from './modules/Taxonomy';
 import Forms from './modules/Forms';
+import UpdateHandler from './modules/UpdateHandler';
 
 (() => {
   // Ozz CMS Modules
@@ -33,6 +34,7 @@ import Forms from './modules/Forms';
   Taxonomy();
   Forms();
   LinkField();
+  UpdateHandler();
 
   const repeaterField = new RepeaterField();
   repeaterField.initRepeater(false, () => {

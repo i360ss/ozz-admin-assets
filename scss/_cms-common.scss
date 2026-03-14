@@ -143,6 +143,40 @@ a {
   }
 }
 
+// Ozz CMS Notification
+.ozz-notification {
+  padding: 10px;
+  margin: 10px 0;
+  background: color(white);
+  border-radius: 5px;
+  border: 1px solid color(white);
+  a {
+    color: color(primary);
+  }
+  &.success {
+    background: color(success-10);
+    border-color: color(success);
+  }
+  &.info {
+    background: color(blue-10);
+    border-color: color(blue);
+  }
+  &.warning {
+    background: color(warning-10);
+    border-color: color(warning);
+    .button {
+      @extend .warning;
+    }
+  }
+  &.danger {
+    background: color(danger-10);
+    border-color: color(danger);
+    .button {
+      @extend .danger;
+    }
+  }
+}
+
 // CMS Forms
 .ozz-fm {
   * {

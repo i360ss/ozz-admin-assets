@@ -1941,6 +1941,14 @@ header .container ul li a {
     opacity: 1;
   }
 }
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 .breadcrumb {
   padding: 20px 0;
 }
@@ -2129,6 +2137,23 @@ a {
   background: var(--oz-danger-10);
   border-color: var(--oz-danger);
 }
+.loader-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loader {
+  width: 25px;
+  height: 25px;
+  border: 3px solid var(--oz-primary);
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
 .ozz-fm * {
   font-size: 15px;
 }

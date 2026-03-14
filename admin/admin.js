@@ -1743,16 +1743,16 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         var button = form.querySelector('input[type="submit"]');
         form.addEventListener('submit', function (e) {
           e.preventDefault();
-          button.disabled = true;
-          button.value = 'Updating framework...';
+          button.setAttribute('disabled', true);
+          notifyDOM.querySelector('.content').innerHTML = '<span class="loader-text"><span class="loader"></span> Updating...</span>';
           var getResult = (0, _utils_Fetch__WEBPACK_IMPORTED_MODULE_0__.send)(form.action, 'POST');
           getResult.then(function (response) {
             notifyDOM.classList.remove('info');
             if (response.success) {
-              notifyDOM.textContent = 'Framework updated successfully ✓';
+              notifyDOM.innerHTML = response.message || 'Update failed';
               notifyDOM.classList.add('success');
             } else {
-              notifyDOM.textContent = response.message || 'Update failed';
+              notifyDOM.innerHTML = response.message || 'Update failed';
               notifyDOM.classList.add('danger');
             }
           });

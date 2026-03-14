@@ -10,17 +10,17 @@ export default () => {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    button.disabled = true;
-    button.value = 'Updating framework...';
+    button.setAttribute('disabled', true);
+    notifyDOM.querySelector('.content').innerHTML = '<span class="loader-text"><span class="loader"></span> Updating...</span>';
 
     const getResult = send(form.action, 'POST');
     getResult.then(response => {
       notifyDOM.classList.remove('info');
       if (response.success) {
-        notifyDOM.textContent = 'Framework updated successfully ✓';
+        notifyDOM.innerHTML = response.message || 'Update failed';
         notifyDOM.classList.add('success');
       } else {
-        notifyDOM.textContent = response.message || 'Update failed';
+        notifyDOM.innerHTML = response.message || 'Update failed';
         notifyDOM.classList.add('danger');
       }
     });

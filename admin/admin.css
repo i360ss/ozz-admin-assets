@@ -990,6 +990,7 @@ strong {
   }
 }
 .button[disabled=true] {
+  pointer-events: none;
   opacity: 0.4;
   filter: saturate(0);
 }
@@ -2060,7 +2061,7 @@ a {
   color: var(--oz-danger);
   background-color: var(--oz-danger-10);
 }
-.label.danger, .label.spam, .label.cancelled {
+.label.danger, .ozz-notification.danger .label.button, .label.spam, .label.cancelled {
   color: var(--oz-white);
   background-color: var(--oz-danger-70);
 }
@@ -2072,7 +2073,7 @@ a {
   color: var(--oz-white);
   background-color: var(--oz-success-10);
 }
-.label.draft, .label.warning, .label.pending, .label.hold {
+.label.draft, .label.warning, .ozz-notification.warning .label.button, .label.pending, .label.hold {
   color: var(--oz-warning);
   background-color: var(--oz-warning-10);
 }
@@ -2089,19 +2090,45 @@ a {
   padding: 0;
   transform: translateY(-5px);
 }
-.label.dot.trash, .label.dot.danger {
+.label.dot.trash, .label.dot.danger, .ozz-notification.danger .label.dot.button {
   background: var(--oz-danger);
 }
 .label.dot.published, .label.dot.success {
   background-color: var(--oz-success);
 }
-.label.dot.draft, .label.dot.warning {
+.label.dot.draft, .label.dot.warning, .ozz-notification.warning .label.dot.button {
   background-color: var(--oz-warning);
 }
 .label.dot.info {
   background-color: var(--oz-blue);
 }
 
+.ozz-notification {
+  padding: 10px;
+  margin: 10px 0;
+  background: var(--oz-white);
+  border-radius: 5px;
+  border: 1px solid var(--oz-white);
+}
+.ozz-notification a {
+  color: var(--oz-primary);
+}
+.ozz-notification.success {
+  background: var(--oz-success-10);
+  border-color: var(--oz-success);
+}
+.ozz-notification.info {
+  background: var(--oz-blue-10);
+  border-color: var(--oz-blue);
+}
+.ozz-notification.warning, .ozz-notification.warning .ozz-notification.button {
+  background: var(--oz-warning-10);
+  border-color: var(--oz-warning);
+}
+.ozz-notification.danger, .ozz-notification.danger .ozz-notification.button {
+  background: var(--oz-danger-10);
+  border-color: var(--oz-danger);
+}
 .ozz-fm * {
   font-size: 15px;
 }
@@ -2440,13 +2467,13 @@ input[type=radio], input[type=radio]:checked::after {
   background: var(--oz-success);
   border-radius: 50%;
 }
-.ozz-table tr.new-entry-label td:first-of-type:before.trash, .ozz-table tr.new-entry-label td:first-of-type:before.danger {
+.ozz-table tr.new-entry-label td:first-of-type:before.trash, .ozz-table tr.new-entry-label td:first-of-type:before.danger, .ozz-table tr.new-entry-label .ozz-notification.danger td.button:first-of-type:before, .ozz-notification.danger .ozz-table tr.new-entry-label td.button:first-of-type:before {
   background: var(--oz-danger);
 }
 .ozz-table tr.new-entry-label td:first-of-type:before.published, .ozz-table tr.new-entry-label td:first-of-type:before.success {
   background-color: var(--oz-success);
 }
-.ozz-table tr.new-entry-label td:first-of-type:before.draft, .ozz-table tr.new-entry-label td:first-of-type:before.warning {
+.ozz-table tr.new-entry-label td:first-of-type:before.draft, .ozz-table tr.new-entry-label td:first-of-type:before.warning, .ozz-table tr.new-entry-label .ozz-notification.warning td.button:first-of-type:before, .ozz-notification.warning .ozz-table tr.new-entry-label td.button:first-of-type:before {
   background-color: var(--oz-warning);
 }
 .ozz-table tr.new-entry-label td:first-of-type:before.info {

@@ -265,11 +265,6 @@ body.ozz-cms[data-theme="dark"]{
         border-color: color(silver-10);
         background: rgba(0,0,0,0.1);
       }
-      &:not(input[type="submit"]) {
-        &:focus {
-          border-color: color(primary);
-        }
-      }
       &.error {
         border-color: color(danger);
       }
@@ -466,9 +461,17 @@ body.ozz-cms[data-theme="dark"]{
   // Widget
   .ozz-widget {
     @include dark-skin-1;
-    &__item {
+    &__item,
+    &__item-v2 {
       &-raw {
         border-color: color(dark2);
+      }
+    }
+    &__tab {
+      background: color(dark);
+      border-color: color(dark);
+      &:hover {
+        border-color: color(primary);
       }
     }
     .ozz-fm {

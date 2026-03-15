@@ -1885,6 +1885,9 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         /* harmony export */closePopup: function closePopup() {
           return /* binding */_closePopup;
         },
+        /* harmony export */initPopups: function initPopups() {
+          return /* binding */_initPopups;
+        },
         /* harmony export */openPopup: function openPopup() {
           return /* binding */_openPopup;
         }
@@ -1892,6 +1895,22 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
       });
       /* harmony import */
       var _State__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./State */"./js/utils/State.js");
+
+      /**
+       * Init popups from DOM level
+       */
+      var _initPopups = function _initPopups() {
+        var popups = document.querySelectorAll('[ozz-cms-popup]');
+        if (popups.length === 0) return;
+        popups.forEach(function (popup) {
+          var trigger = popup.querySelector('[popupTrigger]');
+          var DOM = popup.querySelector('[popupDOM]');
+          if (!DOM || !trigger) return;
+          trigger.addEventListener('click', function () {
+            _openPopup(DOM);
+          });
+        });
+      };
 
       /**
        * Bind events after close
@@ -7573,6 +7592,8 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
     var _modules_Forms__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./modules/Forms */"./js/modules/Forms.js");
     /* harmony import */
     var _modules_UpdateHandler__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./modules/UpdateHandler */"./js/modules/UpdateHandler.js");
+    /* harmony import */
+    var _utils_Popup__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./utils/Popup */"./js/utils/Popup.js");
     // Modules
 
     (function () {
@@ -7593,6 +7614,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
       (0, _modules_Forms__WEBPACK_IMPORTED_MODULE_15__["default"])();
       (0, _modules_LinkField__WEBPACK_IMPORTED_MODULE_13__["default"])();
       (0, _modules_UpdateHandler__WEBPACK_IMPORTED_MODULE_16__["default"])();
+      (0, _utils_Popup__WEBPACK_IMPORTED_MODULE_17__.initPopups)();
       var repeaterField = new _modules_RepeaterField__WEBPACK_IMPORTED_MODULE_3__["default"]();
       repeaterField.initRepeater(false, function () {
         (0, _modules_MediaManagerPopup__WEBPACK_IMPORTED_MODULE_7__["default"])();

@@ -1,6 +1,24 @@
 import { SetState } from './State';
 
 /**
+ * Init popups from DOM level
+ */
+const initPopups = () => {
+  const popups = document.querySelectorAll('[ozz-cms-popup]');
+  if (popups.length === 0) return;
+
+  popups.forEach(popup => {
+    const trigger = popup.querySelector('[popupTrigger]');
+    const DOM = popup.querySelector('[popupDOM]');
+    if (!DOM || !trigger) return;
+
+    trigger.addEventListener('click', () => {
+      openPopup(DOM);
+    })
+  });
+}
+
+/**
  * Bind events after close
  * @param {Function} bindAfterClose 
  */
@@ -59,4 +77,4 @@ const openPopup = ( popupDOM, bindEvent=false, afterCloseCallback=false ) => {
   }, {once: true});
 }
 
-export { openPopup, closePopup };
+export { openPopup, closePopup, initPopups };

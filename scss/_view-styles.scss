@@ -14,6 +14,22 @@ body.ozz-cms {
   }
   // Settings - View
   &.settings {
+    .ozz-widget-wrap {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-gap: 24px;
+      &__right-col {
+        width: 320px;
+      }
+      .ozz-widget {
+        &__tab {
+          span {
+            display: inline-block;
+            margin-bottom: 5px;
+          }
+        }
+      }
+    }
     .profile-image {
       border: 5px solid color(light1-10);
       border-radius: 50%;
@@ -38,18 +54,22 @@ body.ozz-cms {
     .ozz-widget__item-raw {
       padding: 0;
     }
+    .ozz-fm__submit-wrap {
+      .button {
+        width: auto;
+      }
+    }
     .terms-table {
       input {
         width: 100%;
-        padding: 5px;
+        padding: 8px;
         border: 1px solid transparent;
         border-radius: 5px;
         font-size: $font-small-3;
         &:not(input[type="submit"]) {
           &:focus {
-            border-color: color(primary);
-            box-shadow: 0 0 0 4px color(primary-20);
-            transition: .3s ease-in-out;
+            border-color: transparent;
+            box-shadow: 0 0 0 2px color(blue);
           }
         }
         &.error {

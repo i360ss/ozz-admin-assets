@@ -103,6 +103,7 @@ a {
     color: color(danger);
     background-color: color(danger-10);
   }
+  &.error,
   &.danger,
   &.spam,
   &.cancelled {
@@ -464,6 +465,43 @@ input[type="radio"] {
       }
     }
   }
+  &__item-v2 {
+    &-raw {
+      padding: 10px 0;
+      &:not(:last-child, .no-border) {
+        border-bottom: 1px solid color(light1);
+      }
+      label,
+      span {
+        display: block;
+        font-size: $font-small-2;
+      }
+      label {
+        margin-bottom: 10px;
+        opacity: 0.6;
+      }
+    }
+  }
+  &__tab {
+    width: calc(100% + 20px);
+    margin-left: -10px;
+    padding: 10px;
+    border-radius: 5px;
+    background: color(light2);
+    border: 1px solid color(light1);
+    cursor: pointer;
+    &:hover {
+      border-color: color(primary);
+    }
+    &:not(:last-of-type) {
+      margin-bottom: 5px;
+    }
+    label,
+    span,
+    div {
+      font-size: $font-small-2;
+    }
+  }
   // Forms inside widget
   .ozz-fm {
     padding: 0;
@@ -542,7 +580,7 @@ input[type="radio"] {
       }
     }
     th {
-      padding: 5px 16px;
+      padding: 8px 16px;
       border-bottom: 1px solid color(light1);
       border-top: 1px solid color(light1);
       background: color(light2);
@@ -552,7 +590,7 @@ input[type="radio"] {
       color: color(dark2);
     }
     td {
-      padding: 3px 16px;
+      padding: 8px 16px;
       font-size: $font-small-3;
       color: color(dark1);
     }

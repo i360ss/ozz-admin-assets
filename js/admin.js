@@ -16,6 +16,7 @@ import LinkField from './modules/LinkField';
 import Taxonomy from './modules/Taxonomy';
 import Forms from './modules/Forms';
 import UpdateHandler from './modules/UpdateHandler';
+import PostEdit from './modules/PostEdit';
 import { initPopups } from './utils/Popup';
 
 (() => {
@@ -36,6 +37,7 @@ import { initPopups } from './utils/Popup';
   Forms();
   LinkField();
   UpdateHandler();
+  PostEdit();
   initPopups();
 
   const repeaterField = new RepeaterField();

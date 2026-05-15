@@ -1247,6 +1247,34 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
 
       /***/
     }),
+    /***/"./js/modules/PostEdit.js": (
+    /*!********************************!*\
+      !*** ./js/modules/PostEdit.js ***!
+      \********************************/
+    /***/
+    function _js_modules_PostEditJs(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+      __webpack_require__.r(__webpack_exports__);
+      /* harmony export */
+      __webpack_require__.d(__webpack_exports__, {
+        /* harmony export */"default": function _default() {
+          return __WEBPACK_DEFAULT_EXPORT__;
+        }
+        /* harmony export */
+      });
+      /* harmony import */
+      var _FormHandler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./FormHandler */"./js/modules/FormHandler.js");
+
+      /* harmony default export */
+      var __WEBPACK_DEFAULT_EXPORT__ = function __WEBPACK_DEFAULT_EXPORT__(e) {
+        var forms = document.querySelectorAll('form.ozz-fm');
+        if (forms.length === 0) return;
+        forms.forEach(function (form) {
+          form.addEventListener('submit', _FormHandler__WEBPACK_IMPORTED_MODULE_0__["default"]);
+        });
+      };
+
+      /***/
+    }),
     /***/"./js/modules/PostTabs.js": (
     /*!********************************!*\
       !*** ./js/modules/PostTabs.js ***!
@@ -7593,7 +7621,9 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
     /* harmony import */
     var _modules_UpdateHandler__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./modules/UpdateHandler */"./js/modules/UpdateHandler.js");
     /* harmony import */
-    var _utils_Popup__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./utils/Popup */"./js/utils/Popup.js");
+    var _modules_PostEdit__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./modules/PostEdit */"./js/modules/PostEdit.js");
+    /* harmony import */
+    var _utils_Popup__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./utils/Popup */"./js/utils/Popup.js");
     // Modules
 
     (function () {
@@ -7614,7 +7644,8 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
       (0, _modules_Forms__WEBPACK_IMPORTED_MODULE_15__["default"])();
       (0, _modules_LinkField__WEBPACK_IMPORTED_MODULE_13__["default"])();
       (0, _modules_UpdateHandler__WEBPACK_IMPORTED_MODULE_16__["default"])();
-      (0, _utils_Popup__WEBPACK_IMPORTED_MODULE_17__.initPopups)();
+      (0, _modules_PostEdit__WEBPACK_IMPORTED_MODULE_17__["default"])();
+      (0, _utils_Popup__WEBPACK_IMPORTED_MODULE_18__.initPopups)();
       var repeaterField = new _modules_RepeaterField__WEBPACK_IMPORTED_MODULE_3__["default"]();
       repeaterField.initRepeater(false, function () {
         (0, _modules_MediaManagerPopup__WEBPACK_IMPORTED_MODULE_7__["default"])();

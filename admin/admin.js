@@ -1293,6 +1293,17 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           });
           (_document$querySelect3 = document.querySelector(".ozz-cms .post-edit-view__tab-menu > a > .button.".concat(tab))) === null || _document$querySelect3 === void 0 || _document$querySelect3.classList.add('active');
           (_document$getElementB = document.getElementById("tab_id-".concat(tab))) === null || _document$getElementB === void 0 || _document$getElementB.classList.add('active');
+
+          // Store Tab name in a hidden field to redirect back
+          var form = document.querySelector('.ozz-cms .post-edit-view .ozz-fm');
+          var tabNameHiddenField = form.querySelector("input[name=\"___taburl\"][type=\"hidden\"]");
+          if (!tabNameHiddenField) {
+            tabNameHiddenField = document.createElement('input');
+            tabNameHiddenField.type = 'hidden';
+            tabNameHiddenField.name = '___taburl';
+            form.appendChild(tabNameHiddenField);
+          }
+          tabNameHiddenField.value = tab;
         };
         var ozzFocusErrorTab = function ozzFocusErrorTab() {
           var errors = document.querySelectorAll('.field-error', 'input.error', 'textarea.error', 'select.error');

@@ -20,6 +20,17 @@ export default () => {
 
     document.querySelector(`.ozz-cms .post-edit-view__tab-menu > a > .button.${tab}`)?.classList.add('active');
     document.getElementById(`tab_id-${tab}`)?.classList.add('active');
+
+    // Store Tab name in a hidden field to redirect back
+    const form = document.querySelector('.ozz-cms .post-edit-view .ozz-fm');
+    let tabNameHiddenField = form.querySelector(`input[name="___taburl"][type="hidden"]`);
+    if (!tabNameHiddenField) {
+      tabNameHiddenField = document.createElement('input');
+      tabNameHiddenField.type = 'hidden';
+      tabNameHiddenField.name = '___taburl';
+      form.appendChild(tabNameHiddenField);
+    }
+    tabNameHiddenField.value = tab;
   };
 
   const ozzFocusErrorTab = () => {

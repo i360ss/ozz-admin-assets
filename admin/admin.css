@@ -3266,7 +3266,7 @@ body.nav-collapsed .cms-global-search__result {
   background: transparent;
 }
 .listing-s1 table .actions {
-  width: min-content;
+  width: max-content;
 }
 .listing-s1 .align-center {
   text-align: center;

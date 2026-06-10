@@ -2,7 +2,6 @@ import RepeaterField from './RepeaterField';
 import OzzWyg from '../vendor/ozz-wyg';
 import Sortable from '../vendor/Sortable';
 import { SetState, GetState } from '../utils/State';
-import FormHandler from './FormHandler';
 import MediaManagerPopup from './MediaManagerPopup';
 import LinkField from './LinkField';
 
@@ -130,9 +129,6 @@ export default () => {
         }
       }
     });
-
-    // On Submit with block editor
-    blockEditor.closest('form.ozz-fm').addEventListener('submit', FormHandler);
 
     // Add index to field names
     function indexFieldNames() {

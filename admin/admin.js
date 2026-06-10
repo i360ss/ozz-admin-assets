@@ -80,11 +80,9 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
       /* harmony import */
       var _utils_State__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/State */"./js/utils/State.js");
       /* harmony import */
-      var _FormHandler__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./FormHandler */"./js/modules/FormHandler.js");
+      var _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./MediaManagerPopup */"./js/modules/MediaManagerPopup.js");
       /* harmony import */
-      var _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./MediaManagerPopup */"./js/modules/MediaManagerPopup.js");
-      /* harmony import */
-      var _LinkField__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./LinkField */"./js/modules/LinkField.js");
+      var _LinkField__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./LinkField */"./js/modules/LinkField.js");
 
       /* harmony default export */
       var __WEBPACK_DEFAULT_EXPORT__ = function __WEBPACK_DEFAULT_EXPORT__() {
@@ -174,11 +172,11 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               draggedItem.innerHTML = "".concat(initialDOM, " <div class=\"ozz-accordion-body\">").concat(thisBlockFormDOM.innerHTML, "</div>");
               addCommonEvents(draggedItem);
               repeaterField.initRepeater(draggedItem, function () {
-                (0, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_5__["default"])();
-                (0, _LinkField__WEBPACK_IMPORTED_MODULE_6__["default"])();
+                (0, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_4__["default"])();
+                (0, _LinkField__WEBPACK_IMPORTED_MODULE_5__["default"])();
               });
-              (0, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_5__["default"])(draggedItem);
-              (0, _LinkField__WEBPACK_IMPORTED_MODULE_6__["default"])();
+              (0, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_4__["default"])(draggedItem);
+              (0, _LinkField__WEBPACK_IMPORTED_MODULE_5__["default"])();
               var editors = draggedItem.querySelectorAll('[data-ozz-wyg]');
               if (editors.length) {
                 editors.forEach(function (editor) {
@@ -190,9 +188,6 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               }
             }
           });
-
-          // On Submit with block editor
-          blockEditor.closest('form.ozz-fm').addEventListener('submit', _FormHandler__WEBPACK_IMPORTED_MODULE_4__["default"]);
 
           // Add index to field names
           function indexFieldNames() {
@@ -253,11 +248,11 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 blockFormLoader.appendChild(blockClone);
                 indexFieldNames();
                 repeaterField.initRepeater(blockClone, function () {
-                  (0, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_5__["default"])(blockClone);
-                  (0, _LinkField__WEBPACK_IMPORTED_MODULE_6__["default"])();
+                  (0, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_4__["default"])(blockClone);
+                  (0, _LinkField__WEBPACK_IMPORTED_MODULE_5__["default"])();
                 });
-                (0, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_5__["default"])(blockClone);
-                (0, _LinkField__WEBPACK_IMPORTED_MODULE_6__["default"])();
+                (0, _MediaManagerPopup__WEBPACK_IMPORTED_MODULE_4__["default"])(blockClone);
+                (0, _LinkField__WEBPACK_IMPORTED_MODULE_5__["default"])();
               });
 
               // Block accordion event
@@ -415,29 +410,42 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         /* harmony export */
       });
       /* harmony default export */
-      var __WEBPACK_DEFAULT_EXPORT__ = function __WEBPACK_DEFAULT_EXPORT__(e) {
-        e.preventDefault();
-        var thisForm = e.target;
+      var __WEBPACK_DEFAULT_EXPORT__ = FormHandler = function FormHandler() {
+        var forms = document.querySelectorAll('form.ozz-fm');
+        if (forms.length === 0) return;
 
-        // Store OzzWyg data in a hidden field
-        var ozzWygEditors = thisForm.querySelectorAll('[data-ozz-wyg]');
-        if (ozzWygEditors.length > 0) {
-          ozzWygEditors.forEach(function (wygEditor) {
-            var name = wygEditor.getAttribute('data-field-name');
-            var value = wygEditor.querySelector('[data-editor-area]').innerHTML;
-            var existingHiddenField = thisForm.querySelector("input[type=\"hidden\"][name=\"".concat(name, "\"]"));
-            if (!existingHiddenField) {
-              var hdnField = document.createElement('input');
-              hdnField.type = 'hidden';
-              hdnField.name = name;
-              hdnField.value = value;
-              thisForm.appendChild(hdnField);
-            } else {
-              existingHiddenField.value = value;
-            }
-          });
-        }
-        thisForm.submit();
+        // Handle form submission
+        var handleSubmit = function handleSubmit(e) {
+          e.preventDefault();
+          var thisForm = e.target;
+
+          // Store OzzWyg data in a hidden field
+          var ozzWygEditors = thisForm.querySelectorAll('[data-ozz-wyg]');
+          if (ozzWygEditors.length > 0) {
+            ozzWygEditors.forEach(function (wygEditor) {
+              var name = wygEditor.getAttribute('data-field-name');
+              var editorArea = wygEditor.querySelector('[data-editor-area]');
+              if (!name || !editorArea) return;
+              var value = editorArea.innerHTML;
+              var hiddenField = thisForm.querySelector("input[type=\"hidden\"][name=\"".concat(name, "\"]"));
+
+              // Create or update the hidden field
+              if (!hiddenField) {
+                hiddenField = document.createElement('input');
+                hiddenField.type = 'hidden';
+                hiddenField.name = name;
+                thisForm.appendChild(hiddenField);
+              }
+              hiddenField.value = value;
+            });
+          }
+          HTMLFormElement.prototype.submit.call(thisForm);
+        };
+
+        // Bind submit event
+        forms.forEach(function (form) {
+          form.addEventListener('submit', handleSubmit);
+        });
       };
 
       /***/
@@ -1244,34 +1252,6 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           } else if (element.querySelector(".".concat(activateClass))) {
             element.querySelector(".".concat(activateClass)).classList.add('active');
           }
-        });
-      };
-
-      /***/
-    }),
-    /***/"./js/modules/PostEdit.js": (
-    /*!********************************!*\
-      !*** ./js/modules/PostEdit.js ***!
-      \********************************/
-    /***/
-    function _js_modules_PostEditJs(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-      __webpack_require__.r(__webpack_exports__);
-      /* harmony export */
-      __webpack_require__.d(__webpack_exports__, {
-        /* harmony export */"default": function _default() {
-          return __WEBPACK_DEFAULT_EXPORT__;
-        }
-        /* harmony export */
-      });
-      /* harmony import */
-      var _FormHandler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./FormHandler */"./js/modules/FormHandler.js");
-
-      /* harmony default export */
-      var __WEBPACK_DEFAULT_EXPORT__ = function __WEBPACK_DEFAULT_EXPORT__(e) {
-        var forms = document.querySelectorAll('form.ozz-fm');
-        if (forms.length === 0) return;
-        forms.forEach(function (form) {
-          form.addEventListener('submit', _FormHandler__WEBPACK_IMPORTED_MODULE_0__["default"]);
         });
       };
 
@@ -7623,7 +7603,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
     /* harmony import */
     var _modules_UpdateHandler__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./modules/UpdateHandler */"./js/modules/UpdateHandler.js");
     /* harmony import */
-    var _modules_PostEdit__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./modules/PostEdit */"./js/modules/PostEdit.js");
+    var _modules_FormHandler__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./modules/FormHandler */"./js/modules/FormHandler.js");
     /* harmony import */
     var _utils_Popup__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./utils/Popup */"./js/utils/Popup.js");
     // Modules
@@ -7646,7 +7626,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
       (0, _modules_Forms__WEBPACK_IMPORTED_MODULE_15__["default"])();
       (0, _modules_LinkField__WEBPACK_IMPORTED_MODULE_13__["default"])();
       (0, _modules_UpdateHandler__WEBPACK_IMPORTED_MODULE_16__["default"])();
-      (0, _modules_PostEdit__WEBPACK_IMPORTED_MODULE_17__["default"])();
+      (0, _modules_FormHandler__WEBPACK_IMPORTED_MODULE_17__["default"])();
       (0, _utils_Popup__WEBPACK_IMPORTED_MODULE_18__.initPopups)();
       var repeaterField = new _modules_RepeaterField__WEBPACK_IMPORTED_MODULE_3__["default"]();
       repeaterField.initRepeater(false, function () {

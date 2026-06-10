@@ -421,20 +421,22 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
 
         // Store OzzWyg data in a hidden field
         var ozzWygEditors = thisForm.querySelectorAll('[data-ozz-wyg]');
-        ozzWygEditors.forEach(function (wygEditor) {
-          var name = wygEditor.getAttribute('data-field-name');
-          var value = wygEditor.querySelector('[data-editor-area]').innerHTML;
-          var existingHiddenField = thisForm.querySelector("input[name=\"".concat(name, "\"]"));
-          if (!existingHiddenField) {
-            var hdnField = document.createElement('input');
-            hdnField.type = 'hidden';
-            hdnField.name = name;
-            hdnField.value = value;
-            thisForm.appendChild(hdnField);
-          } else {
-            existingHiddenField.value = value;
-          }
-        });
+        if (ozzWygEditors.length > 0) {
+          ozzWygEditors.forEach(function (wygEditor) {
+            var name = wygEditor.getAttribute('data-field-name');
+            var value = wygEditor.querySelector('[data-editor-area]').innerHTML;
+            var existingHiddenField = thisForm.querySelector("input[type=\"hidden\"][name=\"".concat(name, "\"]"));
+            if (!existingHiddenField) {
+              var hdnField = document.createElement('input');
+              hdnField.type = 'hidden';
+              hdnField.name = name;
+              hdnField.value = value;
+              thisForm.appendChild(hdnField);
+            } else {
+              existingHiddenField.value = value;
+            }
+          });
+        }
         thisForm.submit();
       };
 

@@ -1464,12 +1464,18 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             var addItemTrigger = DOM ? DOM.querySelectorAll('.ozz-fm__repeat-add') : document.querySelectorAll('.ozz-fm__repeat-add');
             addItemTrigger.forEach(function (addTrigger) {
               addTrigger.addEventListener('click', function (e) {
-                var _newItem$querySelecto, _newItem$querySelecto2;
+                var _thisRepeater$getAttr, _newItem$querySelecto, _newItem$querySelecto2;
                 var thisRepeater = e.target.closest('.ozz-fm__repeat'),
                   thisWrapper = thisRepeater.querySelector(':scope > .ozz-fm__repeat-wrapper'),
                   thisItemCount = thisWrapper.querySelectorAll(':scope > .ozz-fm__repeat-fields'),
                   thisItem = thisWrapper.querySelector(':scope > .ozz-fm__repeat-fields'),
-                  newItem = thisItem.cloneNode(true);
+                  newItem = thisItem.cloneNode(true),
+                  maxRepeates = (_thisRepeater$getAttr = thisRepeater.getAttribute('data-ozz-repeat-max')) !== null && _thisRepeater$getAttr !== void 0 ? _thisRepeater$getAttr : false;
+                if (maxRepeates && thisItemCount.length >= maxRepeates) {
+                  addTrigger.setAttribute('disabled', true);
+                  return false;
+                }
+                addTrigger.removeAttribute('disabled', true);
 
                 // Add ID to new item
                 newItem.setAttribute('id', "rptf-".concat(_this5.randomString(18)));

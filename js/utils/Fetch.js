@@ -1,9 +1,16 @@
 // Send fetch request
 const send = (url, method='GET', body=null, headers={}) => {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content') ?? '';
+
+  const requestHeaders = {
+    'X-CSRF-TOKEN': csrfToken,
+    ...headers
+  };
+
   return new Promise((resolve, reject) => {
     fetch(url, {
       method: method,
-      headers: headers,
+      headers: requestHeaders,
       body: body,
     })
     .then(response => {

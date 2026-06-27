@@ -4212,6 +4212,7 @@ body.nav-collapsed .cms-global-search__result {
   grid-template-rows: 1fr 25px;
   border: 1px solid var(--oz-silver);
   border-radius: 5px;
+  height: 157px;
   cursor: pointer;
 }
 .ozz-media-popup__thumbnail:hover input[type=checkbox], .ozz-media-popup__thumbnail.active input[type=checkbox] {
@@ -4292,7 +4293,7 @@ body.nav-collapsed .cms-global-search__result {
   position: absolute;
   top: 50%;
   left: 50%;
-  translate: -50% -80%;
+  translate: -50% -20%;
   scale: 3;
   background-image: url("./icons/icons.svg");
   background-repeat: no-repeat;

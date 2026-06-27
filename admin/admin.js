@@ -671,8 +671,9 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             var fileInfo = JSON.parse(mediaFile.getAttribute('data-fileInfo'));
             // Media item Embed DOM
             var fileInfoThumbnail = (0, _EmbedMedia__WEBPACK_IMPORTED_MODULE_0__["default"])(fileInfo);
+            var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             // File Info DOM
-            var fileInfoDOM = "<div class=\"ozz-media-manager__info\">\n      <div class=\"ozz-media-manager__info-thumbnail\">".concat(fileInfoThumbnail, "</div>\n        <ul class=\"ozz-media-manager__info-info\">\n          <li><strong>Name:</strong> ").concat(fileInfo.name, "</li>\n          <li><strong>Size:</strong> ").concat(fileInfo.size, "</li>\n          <li><strong>URL:</strong> <a href=\"").concat(fileInfo.absolute_url, "\" class=\"link\" target=\"_blank\">").concat(fileInfo.absolute_url, "</a></li>\n          <li><strong>Created:</strong> ").concat(fileInfo.created, "</li>\n          <li><strong>Modified:</strong> ").concat(fileInfo.modified, "</li>\n          <li><strong>Access:</strong> ").concat(fileInfo.access, "</li>\n          <li>\n            <form action=\"").concat(DATA.CMS_URL, "media/action?q=delete_file\" method=\"post\" class=\"media-delete-form\">\n              <input type=\"hidden\" value=\"").concat(fileInfo.dir + fileInfo.name, "\" name=\"ozz_media_file_name_delete\">\n              <input type=\"submit\" value=\"Delete File\" class=\"button mini danger\">\n            </form>\n          </li>\n        </ul>\n      </div>");
+            var fileInfoDOM = "<div class=\"ozz-media-manager__info\">\n      <div class=\"ozz-media-manager__info-thumbnail\">".concat(fileInfoThumbnail, "</div>\n        <ul class=\"ozz-media-manager__info-info\">\n          <li><strong>Name:</strong> ").concat(fileInfo.name, "</li>\n          <li><strong>Size:</strong> ").concat(fileInfo.size, "</li>\n          <li><strong>URL:</strong> <a href=\"").concat(fileInfo.absolute_url, "\" class=\"link\" target=\"_blank\">").concat(fileInfo.absolute_url, "</a></li>\n          <li><strong>Created:</strong> ").concat(fileInfo.created, "</li>\n          <li><strong>Modified:</strong> ").concat(fileInfo.modified, "</li>\n          <li><strong>Access:</strong> ").concat(fileInfo.access, "</li>\n          <li>\n            <form action=\"").concat(DATA.CMS_URL, "media/action?q=delete_file\" method=\"post\" class=\"media-delete-form\">\n              <input type=\"hidden\" value=\"").concat(csrfToken, "\" name=\"csrf\">\n              <input type=\"hidden\" value=\"").concat(fileInfo.dir + fileInfo.name, "\" name=\"ozz_media_file_name_delete\">\n              <input type=\"submit\" value=\"Delete File\" class=\"button mini danger\">\n            </form>\n          </li>\n        </ul>\n      </div>");
             mediaViewer.innerHTML = fileInfoDOM;
             MediaManager.classList.add('viewer-active');
             mediaViewer.classList.add('active');
@@ -1878,13 +1879,18 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
       });
       // Send fetch request
       var _send = function _send(url) {
+        var _document$querySelect4;
         var method = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'GET';
         var body = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
         var headers = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+        var csrfToken = (_document$querySelect4 = document.querySelector('meta[name="csrf-token"]').getAttribute('content')) !== null && _document$querySelect4 !== void 0 ? _document$querySelect4 : '';
+        var requestHeaders = _objectSpread({
+          'X-CSRF-TOKEN': csrfToken
+        }, headers);
         return new Promise(function (resolve, reject) {
           fetch(url, {
             method: method,
-            headers: headers,
+            headers: requestHeaders,
             body: body
           }).then(function (response) {
             if (!response.ok) throw new Error('Network response was not ok');

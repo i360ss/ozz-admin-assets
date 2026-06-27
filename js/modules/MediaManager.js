@@ -19,6 +19,7 @@ export default () => {
       const fileInfo = JSON.parse(mediaFile.getAttribute('data-fileInfo'));
       // Media item Embed DOM
       let fileInfoThumbnail = EmbedMedia(fileInfo);
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
       // File Info DOM
       const fileInfoDOM = `<div class="ozz-media-manager__info">
       <div class="ozz-media-manager__info-thumbnail">${fileInfoThumbnail}</div>
@@ -31,6 +32,7 @@ export default () => {
           <li><strong>Access:</strong> ${fileInfo.access}</li>
           <li>
             <form action="${DATA.CMS_URL}media/action?q=delete_file" method="post" class="media-delete-form">
+              <input type="hidden" value="${csrfToken}" name="csrf">
               <input type="hidden" value="${fileInfo.dir + fileInfo.name}" name="ozz_media_file_name_delete">
               <input type="submit" value="Delete File" class="button mini danger">
             </form>

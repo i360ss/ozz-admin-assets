@@ -278,6 +278,26 @@ body.ozz-cms[data-theme="dark"]{
         }
       }
     }
+    div[data-ozz-filter] {
+      ul[data-ozz-filter-dropdown] {
+        color: color(white);
+        border-color: color(silver-10);
+        background: color(dark1);
+        li {
+          &:hover {
+            background: color(dark);
+          }
+          &.selected {
+            background: color(blue);
+          }
+        }
+      }
+      .ozz-tags-container {
+        .ozz-tag {
+          background-color: color(semi-blue);
+        }
+      }
+    }
     &__repeat {
       border-color: color(silver-10);
       &-fields {

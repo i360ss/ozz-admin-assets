@@ -1,4 +1,3 @@
-import RepeaterField from './RepeaterField';
 import OzzWyg from '../vendor/ozz-wyg';
 import Sortable from '../vendor/Sortable';
 import { SetState, GetState } from '../utils/State';
@@ -7,8 +6,6 @@ import LinkField from './LinkField';
 
 export default () => {
   if(document.querySelectorAll('.ozz-block-editor').length === 0) return;
-
-  const repeaterField = new RepeaterField();
 
   const toggleBlockEditorResize = (blockEditorWrapper) => {
     if ( GetState('nav_collapsed') ) {
@@ -113,12 +110,11 @@ export default () => {
         draggedItem.innerHTML = `${initialDOM} <div class="ozz-accordion-body">${thisBlockFormDOM.innerHTML}</div>`;
 
         addCommonEvents(draggedItem);
-        repeaterField.initRepeater(draggedItem, () => {
-          MediaManagerPopup();
-          LinkField();
-        });
         MediaManagerPopup(draggedItem);
         LinkField();
+
+        // Init filter field
+        window.OzzForm.Filter.reinit();
 
         const editors = draggedItem.querySelectorAll('[data-ozz-wyg]');
         if (editors.length) {
@@ -134,7 +130,14 @@ export default () => {
     function indexFieldNames() {
       const usedBlocks = blockFormLoader.querySelectorAll('.ozz-used-block');
       usedBlocks.forEach((block, ind) => {
-        const thisBlockFields = block.querySelectorAll('input, textarea, button, progress, meter, select, datalist, [data-ozz-wyg]');
+        const selector = 'input, textarea, button, progress, meter, select, datalist, [data-ozz-wyg]';
+        const thisBlockFields = [
+          ...block.querySelectorAll(selector),
+          ...[...block.querySelectorAll('template')].flatMap(template =>
+            [...template.content.querySelectorAll(selector)]
+          )
+        ];
+
         thisBlockFields.forEach((field) => {
           let newName;
           if(field.name){
@@ -187,10 +190,6 @@ export default () => {
           addCommonEvents(blockClone);
           blockFormLoader.appendChild(blockClone);
           indexFieldNames();
-          repeaterField.initRepeater(blockClone, () => {
-            MediaManagerPopup(blockClone);
-            LinkField();
-          });
           MediaManagerPopup(blockClone);
           LinkField();
         });

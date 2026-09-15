@@ -1,8 +1,10 @@
+// Ozz form
+import './ozz-form';
+
 // Modules
 import NavBar from './modules/NavBar';
 import GlobalSearch from './modules/GlobalSearch';
 import AlertBar from './modules/AlertBar';
-import RepeaterField from './modules/RepeaterField';
 import PostTabs from './modules/PostTabs';
 import BlockEditor from './modules/BlockEditor';
 import MediaManager from './modules/MediaManager';
@@ -40,8 +42,8 @@ import { initPopups } from './utils/Popup';
   FormHandler();
   initPopups();
 
-  const repeaterField = new RepeaterField();
-  repeaterField.initRepeater(false, () => {
+  // Initi once repeater item added
+  document.addEventListener('ozzRepeater:add', (e) => {
     MediaManagerPopup();
     LinkField();
   });

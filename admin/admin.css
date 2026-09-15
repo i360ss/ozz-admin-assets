@@ -2624,7 +2624,7 @@ input[type=radio], input[type=radio]:checked::after {
 }
 .ozz-cms-popup__box #cms-popup-content form,
 .ozz-cms-popup__box #cms-popup-content .form {
-  padding: 0;
+  padding: 5px;
   box-shadow: none;
 }
 .ozz-cms-popup__box #cms-popup-content form input,

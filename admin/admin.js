@@ -169,7 +169,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               var draggedItem = evt.item;
               var blockName = evt.clone.getAttribute('data-blockName'),
                 thisBlockFormDOM = document.querySelector(".ozz-block-editor-hidden-form-dom #".concat(blockName)),
-                initialDOM = "<div class=\"ozz-block-accordion-bar\">\n            <span class=\"ozz-handle\"></span>\n            <div>\n              <h4>".concat(blocksObj[blockName].label, "</h4>\n              <p class=\"light-text\">").concat(blocksObj[blockName].note ? blocksObj[blockName].note : '', "</p>\n            </div>\n            <div class=\"ozz-block-actions\">\n              <span class=\"ozz-block-duplicate-trigger\"></span>\n              <span class=\"ozz-block-delete-trigger\"></span>\n            </div>\n            <span class=\"ozz-accordion-arrow\"></span>\n          </div>");
+                initialDOM = "<div class=\"ozz-block-accordion-bar\">\n            <span class=\"ozz-handle\"></span>\n            <div>\n              <h4 class=\"ozz-block-accordion-bar__internal-title\"></h4>\n              <span class=\"ozz-block-accordion-bar__block-name\">".concat(blocksObj[blockName].label, "</span>\n              <span class=\"ozz-block-accordion-bar__note\">\n                <p class=\"light-text\">").concat(blocksObj[blockName].note ? blocksObj[blockName].note : '', "</p>\n              </span>\n            </div>\n            <div class=\"ozz-block-actions\">\n              <span class=\"ozz-block-duplicate-trigger\"></span>\n              <span class=\"ozz-block-delete-trigger\"></span>\n            </div>\n            <span class=\"ozz-accordion-arrow\"></span>\n          </div>");
               indexFieldNames();
               draggedItem.classList.add('ozz-used-block');
               draggedItem.innerHTML = "".concat(initialDOM, " <div class=\"ozz-accordion-body\">").concat(thisBlockFormDOM.innerHTML, "</div>");
@@ -200,6 +200,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 return _toConsumableArray2(template.content.querySelectorAll(selector));
               })));
               thisBlockFields.forEach(function (field) {
+                var _field$closest;
                 var newName;
                 if (field.name) {
                   newName = "i-".concat(ind, "__").concat(field.name.replace(/^i-\d+__/, ''));
@@ -213,8 +214,9 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 field.id = newName;
 
                 // Update Label for
-                if (field.closest('.block-editor-field').querySelector('label')) {
-                  field.closest('.block-editor-field').querySelector('label').setAttribute('for', newName);
+                if ((_field$closest = field.closest('.block-editor-field')) !== null && _field$closest !== void 0 && _field$closest.querySelector('label')) {
+                  var _field$closest2;
+                  (_field$closest2 = field.closest('.block-editor-field')) === null || _field$closest2 === void 0 || _field$closest2.querySelector('label').setAttribute('for', newName);
                 }
 
                 // Update media selector field ID and data attr
@@ -300,6 +302,18 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               // Set Block stock layout
               var layouts = blockEditorStockHead.querySelectorAll('.lay');
               _setStockLayout();
+            }
+          }
+        });
+
+        // Update internal block title
+        document.addEventListener('input', function (e) {
+          if (e.target.getAttribute('data-inner-title-field')) {
+            var _e$target$closest;
+            var titleDOM = (_e$target$closest = e.target.closest('.ozz-used-block')) === null || _e$target$closest === void 0 ? void 0 : _e$target$closest.querySelector('.ozz-block-accordion-bar__internal-title');
+            if (titleDOM) {
+              var _e$target$value;
+              titleDOM.textContent = (_e$target$value = e.target.value) !== null && _e$target$value !== void 0 ? _e$target$value : '';
             }
           }
         });

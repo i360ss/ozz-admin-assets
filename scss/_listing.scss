@@ -3,7 +3,6 @@
 
 .listing-s1 {
   &__title {
-    font-family: $rub;
     font-size: $font-normal;
   }
   .note {
@@ -71,7 +70,7 @@
     }
     th {
       padding: 5px 10px 5px 16px;
-      font-family: $rub-m;
+      font-weight: 500;
       font-size: $font-small-2;
       background: color(light2);
       color: color(dark2);

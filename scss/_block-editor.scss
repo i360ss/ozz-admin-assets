@@ -191,7 +191,7 @@
       background: color(white);
       border-radius: $radius1;
       margin-bottom: 14px;
-      font-family: $rub-m;
+      font-weight: 500;
       font-size: $font-small-3;
       color: color(primary);
       padding: 20px;
@@ -226,14 +226,23 @@
         padding: 14px;
         align-items: center;
         cursor: grab;
-        > div {
-          h4,
-          p {
+        &__internal-title {
+          margin: 0 0 5px;
+          color: color(primary);
+          font-size: 16px;
+          font-weight: 600;
+        }
+        &__block-name {
+          display: block;
+          color: var(--oz-gray1);
+          font-size: 14px;
+          font-weight: 500;
+        }
+        &__note {
+          &, p {
             margin: 0;
-          }
-          h4 {
-            font-family: $rub-m;
-            color: color(primary);
+            font-size: 14px;
+            font-style: italic;
           }
         }
         .ozz-handle {

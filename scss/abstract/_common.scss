@@ -1,12 +1,11 @@
 /* ---------- COMMON ----------- */
 @use "variables" as *;
 
-*{
+* {
   text-decoration: none;
   outline: none;
 }
 h1 {
-  font-family: $rub;
   font-size: $font-medium;
 }
 p {
@@ -15,7 +14,7 @@ p {
 }
 label,
 strong {
-  font-family: $rub-m;
+  font-weight: 500;
 }
 .button{
   cursor: pointer;
@@ -26,7 +25,7 @@ strong {
   border-radius: 4px;
   background: color(primary);
   font-size: $font-semi-normal;
-  font-family: $rub-m;
+  font-weight: 500;
   color: color(white);
   box-shadow: 0 3px 2px -3px rgba(0,0,0,0.3), 0 -3px 8px 0 rgba(0,0,0,0.02) inset, 0 3px 8px 0 color(white-30) inset;
   &:hover {

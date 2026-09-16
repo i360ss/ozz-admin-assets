@@ -347,6 +347,9 @@ body.ozz-cms[data-theme="dark"]{
           border-color: color(primary-70);
         }
         .ozz-block-accordion-bar {
+          &__block-name {
+            color: var(--oz-light1);
+          }
           & > div h4 {
             color: color(semi-blue);
           }

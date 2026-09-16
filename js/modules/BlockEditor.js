@@ -94,8 +94,11 @@ export default () => {
           initialDOM = `<div class="ozz-block-accordion-bar">
             <span class="ozz-handle"></span>
             <div>
-              <h4>${blocksObj[blockName].label}</h4>
-              <p class="light-text">${blocksObj[blockName].note ? blocksObj[blockName].note : ''}</p>
+              <h4 class="ozz-block-accordion-bar__internal-title"></h4>
+              <span class="ozz-block-accordion-bar__block-name">${blocksObj[blockName].label}</span>
+              <span class="ozz-block-accordion-bar__note">
+                <p class="light-text">${blocksObj[blockName].note ? blocksObj[blockName].note : ''}</p>
+              </span>
             </div>
             <div class="ozz-block-actions">
               <span class="ozz-block-duplicate-trigger"></span>
@@ -152,8 +155,8 @@ export default () => {
           field.id = newName;
 
           // Update Label for
-          if (field.closest('.block-editor-field').querySelector('label')) {
-            field.closest('.block-editor-field').querySelector('label').setAttribute('for', newName);
+          if (field.closest('.block-editor-field')?.querySelector('label')) {
+            field.closest('.block-editor-field')?.querySelector('label').setAttribute('for', newName);
           }
 
           // Update media selector field ID and data attr
@@ -241,6 +244,16 @@ export default () => {
           });
         }
         setStockLayout();
+      }
+    }
+  });
+
+  // Update internal block title
+  document.addEventListener('input', (e) => {
+    if (e.target.getAttribute('data-inner-title-field')) {
+      const titleDOM = e.target.closest('.ozz-used-block')?.querySelector('.ozz-block-accordion-bar__internal-title');
+      if (titleDOM) {
+        titleDOM.textContent = e.target.value ?? '';
       }
     }
   });

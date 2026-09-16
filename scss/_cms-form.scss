@@ -3,7 +3,6 @@
 
 .ozz-fm {
   * {
-    font-family: $rub;
     font-size: $font-normal;
   }
   .form-item {
@@ -26,7 +25,7 @@
         font-size: 15px;
       }
       h1,h2,h3,h4,h5,h6 {
-        font-family: $rub-m;
+        font-weight: 500;
         line-height: 1.7rem;
         margin: 16px 0;
         span {
@@ -57,7 +56,7 @@
       }
       strong,
       b {
-        font-family: $rub-b;
+        font-weight: 700;
       }
       u {
         text-decoration: underline;
@@ -80,7 +79,7 @@
           font-size: 15px;
         }
         th {
-          font-family: $rub-m;
+          font-weight: 500;
         }
       }
     }
@@ -317,7 +316,7 @@
       margin-bottom: 6px;
       padding: 0 6px;
       font-size: $font-small-3;
-      font-family: $rub-m;
+      font-weight: 500;
     }
     &-number {
       position: absolute;
@@ -325,7 +324,6 @@
       top: 6px;
       padding: 7px 4px;
       height: 45px;
-      font-family: $rub;
       color: color(dark1);
       text-align: right;
     }

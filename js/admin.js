@@ -2,6 +2,7 @@
 import './ozz-form';
 
 // Modules
+import OzzWyg from './vendor/ozz-wyg';
 import NavBar from './modules/NavBar';
 import GlobalSearch from './modules/GlobalSearch';
 import AlertBar from './modules/AlertBar';
@@ -46,5 +47,23 @@ import { initPopups } from './utils/Popup';
   document.addEventListener('ozzRepeater:add', (e) => {
     MediaManagerPopup();
     LinkField();
+
+    const editors = [
+      ...e.detail.item.querySelectorAll('[data-ozz-wyg]'),
+      ...[...e.detail.item.querySelectorAll('template')].flatMap(template =>
+        [...template.content.querySelectorAll('[data-ozz-wyg]')]
+      )
+    ];
+    
+    console.log(editors);
+    
+    if (editors.length) {
+      editors.forEach(editor => {
+        console.log(editor);
+        
+        editor.setAttribute('data-value', '');
+        new OzzWyg({ selector: editor });
+      });
+    }
   });
 })();

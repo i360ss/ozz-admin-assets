@@ -251,6 +251,10 @@
       padding-left: 10px;
       border-radius: 5px 0 0 0;
       min-width: 150px;
+      &.removing {
+        transition: 0.2s ease;
+        opacity: 0;
+      }
       &:hover {
         .ozz-fm__repeat-head {
           background: color(primary-dark-10);
@@ -329,6 +333,7 @@
     }
     &-add {
       &.button {
+        margin-top: 5px;
         margin-left: 2px;
       }
     }

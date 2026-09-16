@@ -20,7 +20,14 @@ export default () => {
     changeTrigger.checked = true;
   }
 
-  document.querySelectorAll('[data-ozz-wyg')?.forEach(editor => {
+  const editors = [
+    ...document.querySelectorAll('[data-ozz-wyg]'),
+    ...[...document.querySelectorAll('template')].flatMap(template =>
+      [...template.content.querySelectorAll('[data-ozz-wyg]')]
+    )
+  ];
+
+  editors?.forEach(editor => {
     editor.setAttribute('data-theme', GetState('theme'));
   });
 }

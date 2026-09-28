@@ -2616,6 +2616,11 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           Conditional: Conditional,
           FileUpload: FileUpload
         };
+
+        // Support HTMX
+        document.addEventListener('htmx:afterSettle', function (evt) {
+          initAll(evt.detail.elt);
+        });
       })(window, document);
 
       /***/

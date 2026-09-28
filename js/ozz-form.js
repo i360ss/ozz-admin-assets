@@ -1049,4 +1049,9 @@
         Conditional,
         FileUpload
     };
+
+    // Support HTMX
+    document.addEventListener('htmx:afterSettle', function (evt) {
+        initAll(evt.detail.elt);
+    });
 })(window, document);

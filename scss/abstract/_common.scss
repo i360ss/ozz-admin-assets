@@ -1,6 +1,8 @@
 /* ---------- COMMON ----------- */
 @use "variables" as *;
 
+@view-transition { navigation: auto; }
+
 * {
   text-decoration: none;
   outline: none;

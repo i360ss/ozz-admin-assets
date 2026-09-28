@@ -932,6 +932,9 @@
 
 /* ---------- MIXINS ----------- */
 /* ---------- COMMON ----------- */
+@view-transition {
+  navigation: auto;
+}
 * {
   text-decoration: none;
   outline: none;

@@ -1815,8 +1815,18 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               return _this6._hydrate(field);
             });
           },
+          reinit: function reinit() {
+            var _scope$matches2,
+              _this7 = this;
+            var scope = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document;
+            var fields = (_scope$matches2 = scope.matches) !== null && _scope$matches2 !== void 0 && _scope$matches2.call(scope, SEL.filter) ? [scope] : Array.from(scope.querySelectorAll(SEL.filter));
+            fields.forEach(function (field) {
+              delete field.dataset.ozzFilterInited;
+              _this7._hydrate(field);
+            });
+          },
           _hydrate: function _hydrate(field) {
-            var _this7 = this;
+            var _this8 = this;
             if (field.dataset.ozzFilterInited === 'true') return;
             field.dataset.ozzFilterInited = 'true';
             var searchField = field.querySelector(SEL.filterTextfield);
@@ -1867,7 +1877,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             // Public per-field API used by Conditional's `changeOptions` action.
             field.updateOptions = function (newOptions) {
               var preserveSelection = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-              return _this7.updateOptions(field, newOptions, preserveSelection);
+              return _this8.updateOptions(field, newOptions, preserveSelection);
             };
           },
           /**
@@ -1900,7 +1910,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             if (state.tagsContainer) this.renderTags(field);
           },
           renderTags: function renderTags(field) {
-            var _this8 = this;
+            var _this9 = this;
             var state = filterState.get(field);
             if (!(state !== null && state !== void 0 && state.tagsContainer)) return;
             state.tagsContainer.innerHTML = '';
@@ -1910,7 +1920,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               tag.innerHTML = "".concat(Utils.escapeHTML(item.text), " <button type=\"button\" class=\"btn remove-tag-btn\" data-val=\"").concat(Utils.escapeHTML(item.value), "\">&times;</button>");
               tag.querySelector('button').addEventListener('click', function (e) {
                 e.stopPropagation();
-                _this8.toggleSelection(field, item.value, item.text);
+                _this9.toggleSelection(field, item.value, item.text);
               });
               state.tagsContainer.appendChild(tag);
             });
@@ -2056,16 +2066,16 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             }
           },
           _handleOutsideInteraction: function _handleOutsideInteraction(e) {
-            var _this9 = this;
+            var _this10 = this;
             var activeField = e.target.closest(SEL.filter);
             document.querySelectorAll(SEL.filter).forEach(function (field) {
               var state = filterState.get(field);
               if (!state) return;
               if (field !== activeField) {
-                if (!state.dropdown.classList.contains('hidden')) _this9._settle(field);
+                if (!state.dropdown.classList.contains('hidden')) _this10._settle(field);
               } else if (e.target === state.searchField) {
                 state.dropdown.classList.remove('hidden');
-                _this9._positionDropdown(field);
+                _this10._positionDropdown(field);
               }
             });
           },
@@ -2119,12 +2129,12 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         var conditionCache = new WeakMap();
         var Conditional = {
           init: function init() {
-            var _scope$matches2,
-              _this10 = this;
+            var _scope$matches3,
+              _this11 = this;
             var scope = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document;
-            var fields = (_scope$matches2 = scope.matches) !== null && _scope$matches2 !== void 0 && _scope$matches2.call(scope, SEL.conditionField) ? [scope] : Array.from(scope.querySelectorAll(SEL.conditionField));
+            var fields = (_scope$matches3 = scope.matches) !== null && _scope$matches3 !== void 0 && _scope$matches3.call(scope, SEL.conditionField) ? [scope] : Array.from(scope.querySelectorAll(SEL.conditionField));
             fields.forEach(function (el) {
-              return _this10._hydrate(el);
+              return _this11._hydrate(el);
             });
           },
           _hydrate: function _hydrate(targetEl) {
@@ -2143,14 +2153,14 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           },
           extractDependencies: function extractDependencies(conditionData) {
             var _conditionData$condit,
-              _this11 = this;
+              _this12 = this;
             var deps = [];
             if (conditionData.target) deps.push(conditionData.target);
             if (Array.isArray((_conditionData$condit = conditionData.conditions) === null || _conditionData$condit === void 0 ? void 0 : _conditionData$condit.rules)) {
               conditionData.conditions.rules.forEach(function (rule) {
                 if (rule.target) deps.push(rule.target);
                 if (rule.field) deps.push(rule.field);
-                if (rule.conditions) deps = deps.concat(_this11.extractDependencies(rule));
+                if (rule.conditions) deps = deps.concat(_this12.extractDependencies(rule));
               });
             }
             return _toConsumableArray2(new Set(deps));
@@ -2190,13 +2200,13 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           },
           evaluate: function evaluate(conditionData, targetEl) {
             var _conditionData$condit2,
-              _this12 = this;
+              _this13 = this;
             if (Array.isArray((_conditionData$condit2 = conditionData.conditions) === null || _conditionData$condit2 === void 0 ? void 0 : _conditionData$condit2.rules)) {
               var relation = (conditionData.conditions.relation || 'AND').toUpperCase();
               var results = conditionData.conditions.rules.map(function (rule) {
-                return rule.conditions ? _this12.evaluate({
+                return rule.conditions ? _this13.evaluate({
                   conditions: rule
-                }, targetEl) : _this12._evaluateSingleRule(rule, targetEl);
+                }, targetEl) : _this13._evaluateSingleRule(rule, targetEl);
               });
               return relation === 'AND' ? results.every(Boolean) : results.some(Boolean);
             }
@@ -2310,18 +2320,18 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           },
           // Called on every bubbled input/change event
           _onSourceChange: function _onSourceChange(changedEl) {
-            var _this13 = this;
+            var _this14 = this;
             document.querySelectorAll(SEL.conditionField).forEach(function (targetEl) {
               var data = conditionCache.get(targetEl);
               if (!data) return;
-              var deps = _this13.extractDependencies(data);
+              var deps = _this14.extractDependencies(data);
               var _iterator = _createForOfIteratorHelper(deps),
                 _step;
               try {
                 for (_iterator.s(); !(_step = _iterator.n()).done;) {
                   var key = _step.value;
-                  if (_this13.findSourceElements(key, targetEl).includes(changedEl)) {
-                    _this13.evaluateAndApply(targetEl, data);
+                  if (_this14.findSourceElements(key, targetEl).includes(changedEl)) {
+                    _this14.evaluateAndApply(targetEl, data);
                     break;
                   }
                 }
@@ -2342,12 +2352,12 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
 
         var FileUpload = {
           init: function init() {
-            var _scope$matches3,
-              _this14 = this;
+            var _scope$matches4,
+              _this15 = this;
             var scope = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document;
-            var fields = (_scope$matches3 = scope.matches) !== null && _scope$matches3 !== void 0 && _scope$matches3.call(scope, SEL.fileField) ? [scope] : Array.from(scope.querySelectorAll(SEL.fileField));
+            var fields = (_scope$matches4 = scope.matches) !== null && _scope$matches4 !== void 0 && _scope$matches4.call(scope, SEL.fileField) ? [scope] : Array.from(scope.querySelectorAll(SEL.fileField));
             fields.forEach(function (field) {
-              return _this14._hydrate(field);
+              return _this15._hydrate(field);
             });
           },
           _hydrate: function _hydrate(field) {
@@ -6311,7 +6321,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
        */
       var OzzWyg = /*#__PURE__*/function () {
         function OzzWyg(options) {
-          var _this15 = this;
+          var _this16 = this;
           _classCallCheck(this, OzzWyg);
           this.options = _objectSpread(_objectSpread({}, OzzWyg.defaults), options);
 
@@ -6454,28 +6464,28 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
           if (this.editors) {
             this.editors.forEach(function (editor) {
               var _ref18, _ref19;
-              var editorID = "i-".concat(_this15.randomId());
+              var editorID = "i-".concat(_this16.randomId());
               editor.setAttribute('data-editor', editorID);
 
               // Capture initial content before we overwrite the DOM
-              var initialContent = (_ref18 = (_ref19 = typeof _this15.options.value === 'string' ? _this15.options.value : null) !== null && _ref19 !== void 0 ? _ref19 : editor.getAttribute('data-value')) !== null && _ref18 !== void 0 ? _ref18 : editor.innerHTML;
+              var initialContent = (_ref18 = (_ref19 = typeof _this16.options.value === 'string' ? _this16.options.value : null) !== null && _ref19 !== void 0 ? _ref19 : editor.getAttribute('data-value')) !== null && _ref18 !== void 0 ? _ref18 : editor.innerHTML;
               var instance = {
                 id: editorID,
                 element: editor,
                 playGround: null,
-                ozzWygInstance: _this15,
+                ozzWygInstance: _this16,
                 initialContent: initialContent
               };
-              _this15.editorInstances.set(editorID, instance);
-              _this15.currentEditorID = editorID;
-              _this15.editor = editor;
-              _this15.editorID = editorID;
-              _this15.initEditor();
-              instance.playGround = _this15.playGround;
+              _this16.editorInstances.set(editorID, instance);
+              _this16.currentEditorID = editorID;
+              _this16.editor = editor;
+              _this16.editorID = editorID;
+              _this16.initEditor();
+              instance.playGround = _this16.playGround;
 
               // Apply initial content if provided
               if (initialContent !== null && initialContent !== undefined && initialContent.trim() !== '') {
-                _this15.setValue(initialContent, editorID);
+                _this16.setValue(initialContent, editorID);
               } else {
                 // Initialize features for any existing content in playground
                 setTimeout(function () {
@@ -6484,26 +6494,26 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                   var instanceEditor = instance.element;
                   if (instancePlayGround) {
                     // Set context for initialization
-                    var originalEditor = _this15.editor;
-                    var originalPlayGround = _this15.playGround;
-                    var originalEditorID = _this15.editorID;
-                    _this15.editor = instanceEditor;
-                    _this15.playGround = instancePlayGround;
-                    _this15.editorID = instance.id;
-                    _this15.currentEditorID = instance.id;
-                    _this15.initializeContentFeatures();
+                    var originalEditor = _this16.editor;
+                    var originalPlayGround = _this16.playGround;
+                    var originalEditorID = _this16.editorID;
+                    _this16.editor = instanceEditor;
+                    _this16.playGround = instancePlayGround;
+                    _this16.editorID = instance.id;
+                    _this16.currentEditorID = instance.id;
+                    _this16.initializeContentFeatures();
 
                     // Restore original context
-                    _this15.editor = originalEditor;
-                    _this15.playGround = originalPlayGround;
-                    _this15.editorID = originalEditorID;
+                    _this16.editor = originalEditor;
+                    _this16.playGround = originalPlayGround;
+                    _this16.editorID = originalEditorID;
                   }
                 }, 0);
               }
 
               // Register instance in static registry
-              OzzWyg.instances.set(editor, _this15);
-              OzzWyg.instances.set(editorID, _this15);
+              OzzWyg.instances.set(editor, _this16);
+              OzzWyg.instances.set(editorID, _this16);
             });
           }
         }
@@ -6535,13 +6545,13 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "initEditor",
           value: function initEditor() {
-            var _this16 = this;
+            var _this17 = this;
             this.editor.classList.add('ozz-wyg');
             this.editor.innerHTML = this.editorDOM();
             this.editor.querySelectorAll('button[data-action]').forEach(function (trigger) {
               trigger.addEventListener('click', function (e) {
-                _this16.setActiveContextFromElement(e.target);
-                _this16.fireAction(e);
+                _this17.setActiveContextFromElement(e.target);
+                _this17.fireAction(e);
               });
             });
 
@@ -6560,7 +6570,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             // Close dropdowns when clicking outside
             document.addEventListener('click', function (e) {
               if (!e.target.closest('.ozz-wyg__tool-has-child')) {
-                _this16.editor.querySelectorAll('.ozz-wyg__tool-child').forEach(function (menu) {
+                _this17.editor.querySelectorAll('.ozz-wyg__tool-child').forEach(function (menu) {
                   menu.classList.remove('active');
                 });
               }
@@ -6577,48 +6587,48 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "initEventListeners",
           value: function initEventListeners() {
-            var _this17 = this;
+            var _this18 = this;
             // Input event - fires on content change
             this.playGround.addEventListener('input', function (e) {
-              _this17.setActiveContextFromElement(_this17.playGround);
-              _this17.handleInput(e);
+              _this18.setActiveContextFromElement(_this18.playGround);
+              _this18.handleInput(e);
             });
 
             // Focus event - when editor gains focus
             this.playGround.addEventListener('focus', function (e) {
-              _this17.setActiveContextFromElement(_this17.playGround);
-              _this17.emitEvent('focus', {
-                editorID: _this17.editorID,
+              _this18.setActiveContextFromElement(_this18.playGround);
+              _this18.emitEvent('focus', {
+                editorID: _this18.editorID,
                 event: e
               });
-              _this17.editor.classList.add('ozz-wyg--focused');
+              _this18.editor.classList.add('ozz-wyg--focused');
             });
 
             // Blur event - when editor loses focus
             this.playGround.addEventListener('blur', function (e) {
-              _this17.setActiveContextFromElement(_this17.playGround);
-              _this17.emitEvent('blur', {
-                editorID: _this17.editorID,
+              _this18.setActiveContextFromElement(_this18.playGround);
+              _this18.emitEvent('blur', {
+                editorID: _this18.editorID,
                 event: e
               });
-              _this17.editor.classList.remove('ozz-wyg--focused');
-              _this17.emitEvent('change', {
-                editorID: _this17.editorID,
-                content: _this17.playGround.innerHTML,
+              _this18.editor.classList.remove('ozz-wyg--focused');
+              _this18.emitEvent('change', {
+                editorID: _this18.editorID,
+                content: _this18.playGround.innerHTML,
                 event: e
               });
             });
 
             // Paste event - clean pasted content
             this.playGround.addEventListener('paste', function (e) {
-              _this17.setActiveContextFromElement(_this17.playGround);
-              _this17.handlePaste(e);
+              _this18.setActiveContextFromElement(_this18.playGround);
+              _this18.handlePaste(e);
             });
 
             // Keyboard shortcuts
             this.playGround.addEventListener('keydown', function (e) {
-              _this17.setActiveContextFromElement(_this17.playGround);
-              _this17.handleKeydown(e);
+              _this18.setActiveContextFromElement(_this18.playGround);
+              _this18.handleKeydown(e);
             });
 
             // Selection change - update toolbar states
@@ -6629,8 +6639,8 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 var commonAncestor = range.commonAncestorContainer;
                 var node = commonAncestor.nodeType === 3 ? commonAncestor.parentElement : commonAncestor;
                 if (node) {
-                  if (_this17.setActiveContextFromElement(node) && _this17.playGround.contains(node)) {
-                    _this17.updateToolbarStates();
+                  if (_this18.setActiveContextFromElement(node) && _this18.playGround.contains(node)) {
+                    _this18.updateToolbarStates();
                   }
                 }
               }
@@ -6638,34 +6648,34 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
 
             // Click event - update toolbar states when clicking in editor
             this.playGround.addEventListener('click', function () {
-              _this17.setActiveContextFromElement(_this17.playGround);
+              _this18.setActiveContextFromElement(_this18.playGround);
               setTimeout(function () {
-                return _this17.updateToolbarStates();
+                return _this18.updateToolbarStates();
               }, 10);
             });
 
             // Mouseup event - update toolbar states after selection
             this.playGround.addEventListener('mouseup', function () {
-              _this17.setActiveContextFromElement(_this17.playGround);
+              _this18.setActiveContextFromElement(_this18.playGround);
               setTimeout(function () {
-                return _this17.updateToolbarStates();
+                return _this18.updateToolbarStates();
               }, 10);
             });
 
             // Keyup event - update toolbar states after keyboard actions
             this.playGround.addEventListener('keyup', function () {
-              _this17.setActiveContextFromElement(_this17.playGround);
+              _this18.setActiveContextFromElement(_this18.playGround);
               setTimeout(function () {
-                return _this17.updateToolbarStates();
+                return _this18.updateToolbarStates();
               }, 10);
             });
 
             // Keydown event - update toolbar states for arrow keys and other navigation
             this.playGround.addEventListener('keydown', function (e) {
               if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
-                _this17.setActiveContextFromElement(_this17.playGround);
+                _this18.setActiveContextFromElement(_this18.playGround);
                 setTimeout(function () {
-                  return _this17.updateToolbarStates();
+                  return _this18.updateToolbarStates();
                 }, 10);
               }
             });
@@ -6847,7 +6857,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "handleKeydown",
           value: function handleKeydown(e) {
-            var _this18 = this;
+            var _this19 = this;
             // Ctrl/Cmd + B - Bold
             if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
               e.preventDefault();
@@ -6884,7 +6894,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
               // Allow default undo behavior
               setTimeout(function () {
-                return _this18.updateToolbarStates();
+                return _this19.updateToolbarStates();
               }, 10);
               return;
             }
@@ -6893,7 +6903,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z' || (e.ctrlKey || e.metaKey) && e.key === 'y') {
               // Allow default redo behavior
               setTimeout(function () {
-                return _this18.updateToolbarStates();
+                return _this19.updateToolbarStates();
               }, 10);
               return;
             }
@@ -7178,26 +7188,26 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "editorDOM",
           value: function editorDOM() {
-            var _this19 = this;
+            var _this20 = this;
             var toolsDOM = '';
             this.options.tools.forEach(function (tool) {
-              if (_this19.tools[tool]) {
+              if (_this20.tools[tool]) {
                 var parentTool = document.createElement('div');
                 parentTool.classList.add('ozz-wyg__tool', "ozz-wyg__tool--".concat(tool));
-                if (_this19.tools[tool].child) {
-                  parentTool.innerHTML = "<div class=\"ozz-wyg__tool-has-child\">".concat(_this19.tools[tool].dom, "<span class=\"more-tools-trigger\"></span></div>");
+                if (_this20.tools[tool].child) {
+                  parentTool.innerHTML = "<div class=\"ozz-wyg__tool-has-child\">".concat(_this20.tools[tool].dom, "<span class=\"more-tools-trigger\"></span></div>");
                   // Get Child tools
                   var childElementWrapper = document.createElement('div');
                   childElementWrapper.classList.add('ozz-wyg__tool-child');
-                  _this19.options.tools.forEach(function (child2) {
-                    if (_this19.tools[tool].child[child2]) {
-                      var childItem = _this19.tools[tool].child[child2];
+                  _this20.options.tools.forEach(function (child2) {
+                    if (_this20.tools[tool].child[child2]) {
+                      var childItem = _this20.tools[tool].child[child2];
                       childElementWrapper.innerHTML += childItem.dom;
                     }
                   });
                   parentTool.appendChild(childElementWrapper);
                 } else {
-                  parentTool.innerHTML = _this19.tools[tool].dom;
+                  parentTool.innerHTML = _this20.tools[tool].dom;
                 }
                 toolsDOM += parentTool.outerHTML;
               }
@@ -7258,7 +7268,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "fireAction",
           value: function fireAction(event) {
-            var _this20 = this;
+            var _this21 = this;
             var action = event.target.getAttribute('data-action');
 
             // Format block
@@ -7284,7 +7294,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
 
             // Update toolbar states after action
             setTimeout(function () {
-              return _this20.updateToolbarStates();
+              return _this21.updateToolbarStates();
             }, 10);
           }
 
@@ -7294,7 +7304,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "linkPopUp",
           value: function linkPopUp(ev) {
-            var _this21 = this;
+            var _this22 = this;
             var linkCls = 'ozz-wyg__tool-link-',
               parent = ev.target.closest(".".concat(linkCls, "trigger"));
             if (!parent) return;
@@ -7327,8 +7337,8 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             // Insert or update link
             var insertLinkTrigger = settingsDOM.querySelector('#insertLinkTrigger-' + this.editorID);
             insertLinkTrigger.addEventListener('click', function () {
-              var urlInput = settingsDOM.querySelector('#url-' + _this21.editorID).value;
-              var targetInput = settingsDOM.querySelector('#target-' + _this21.editorID).value;
+              var urlInput = settingsDOM.querySelector('#url-' + _this22.editorID).value;
+              var targetInput = settingsDOM.querySelector('#target-' + _this22.editorID).value;
               if (urlInput && targetInput) {
                 if (existingAnchor) {
                   // Update existing anchor
@@ -7347,7 +7357,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                   document.execCommand('insertHTML', false, anchor.outerHTML);
                 }
                 settingsDOM.classList.remove('active'); // Close Popup
-                _this21.linkPopOver(); // Init Link Popover
+                _this22.linkPopOver(); // Init Link Popover
               }
             });
 
@@ -7355,7 +7365,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             document.addEventListener('click', function (e) {
               if (!parent.contains(e.target)) {
                 settingsDOM.classList.remove('active');
-                _this21.linkPopOver(); // Init Link Popover
+                _this22.linkPopOver(); // Init Link Popover
               }
             });
           }
@@ -7366,7 +7376,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "linkPopOver",
           value: function linkPopOver() {
-            var _this22 = this;
+            var _this23 = this;
             this.playGround.querySelectorAll('a').forEach(function (anchor) {
               // Only add listeners if not already added
               if (anchor.hasAttribute('data-link-handled')) {
@@ -7381,7 +7391,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                   popoverDOM.setAttribute('contenteditable', false);
                   popoverDOM.classList.add('ozz-wyg-popover');
                   popoverDOM.innerHTML = "\n          <a href=\"".concat(anchor.href, "\" role=\"popover\" target=\"_blank\">").concat(anchor.href, "</a>\n          <button type=\"button\" class=\"ozz-wyg-editlink\"></button>\n          <button type=\"button\" class=\"ozz-wyg-unlink\"></button>");
-                  if (_this22.editor.querySelectorAll('.ozz-wyg-popover').length === 0) {
+                  if (_this23.editor.querySelectorAll('.ozz-wyg-popover').length === 0) {
                     anchor.insertAdjacentElement('afterend', popoverDOM);
 
                     // Position popover element
@@ -7415,7 +7425,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
 
                   // Edit this link
                   popoverDOM.querySelector('.ozz-wyg-editlink').addEventListener('click', function () {
-                    var linkBtn = _this22.editor.querySelector('button[data-action="link"]');
+                    var linkBtn = _this23.editor.querySelector('button[data-action="link"]');
                     setTimeout(function () {
                       linkBtn.click();
                     }, 1);
@@ -7431,7 +7441,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "tablePopUp",
           value: function tablePopUp(ev) {
-            var _this23 = this;
+            var _this24 = this;
             var tableCls = 'ozz-wyg__tool-table-',
               parent = ev.target.closest(".".concat(tableCls, "trigger"));
             if (!parent) return;
@@ -7450,10 +7460,10 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             // Insert or update Table
             var insertTableTrigger = settingsDOM.querySelector('#insertTableTrigger-' + this.editorID);
             insertTableTrigger.addEventListener('click', function () {
-              var rows = settingsDOM.querySelector('#row-' + _this23.editorID).value,
-                columns = settingsDOM.querySelector('#column-' + _this23.editorID).value,
-                noHead = settingsDOM.querySelector('#has-th-' + _this23.editorID).checked,
-                noFooter = settingsDOM.querySelector('#has-footer-' + _this23.editorID).checked;
+              var rows = settingsDOM.querySelector('#row-' + _this24.editorID).value,
+                columns = settingsDOM.querySelector('#column-' + _this24.editorID).value,
+                noHead = settingsDOM.querySelector('#has-th-' + _this24.editorID).checked,
+                noFooter = settingsDOM.querySelector('#has-footer-' + _this24.editorID).checked;
               rows = rows > 100 ? 100 : rows;
               columns = columns > 100 ? 100 : columns;
 
@@ -7498,7 +7508,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               $table.classList.add('ozz-wyg-table-wrapper');
               $table.innerHTML = table.outerHTML;
               document.execCommand('insertHTML', false, "<br>".concat($table.outerHTML, "<br>"));
-              _this23.tableActions(); // Table Actions
+              _this24.tableActions(); // Table Actions
             });
 
             // Close popup
@@ -7515,7 +7525,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "tableActions",
           value: function tableActions() {
-            var _this24 = this;
+            var _this25 = this;
             var $table = this.playGround.querySelectorAll('.ozz-wyg-table-wrapper');
             $table.forEach(function (tbl) {
               // Only add listeners if not already added
@@ -7539,16 +7549,16 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                       var action = e.target.getAttribute('data-tbl-action');
                       switch (action) {
                         case 'addrow':
-                          _this24.addTableRow(tbl);
+                          _this25.addTableRow(tbl);
                           break;
                         case 'deleterow':
-                          _this24.deleteTableRow(tbl);
+                          _this25.deleteTableRow(tbl);
                           break;
                         case 'addcol':
-                          _this24.addTableCol(tbl);
+                          _this25.addTableCol(tbl);
                           break;
                         case 'deletecol':
-                          _this24.deleteTableCol(tbl);
+                          _this25.deleteTableCol(tbl);
                           break;
                         default:
                           break;
@@ -7695,7 +7705,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "mediaPopUp",
           value: function mediaPopUp(ev) {
-            var _this25 = this;
+            var _this26 = this;
             var linkCls = 'ozz-wyg__tool-media-',
               parent = ev.target.closest(".".concat(linkCls, "trigger"));
             if (!parent) return;
@@ -7718,9 +7728,9 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
             // Insert Media
             var insertMediaTrigger = settingsDOM.querySelector('#insertMediaTrigger-' + this.editorID);
             insertMediaTrigger.addEventListener('click', function () {
-              var files = settingsDOM.querySelector('#file-' + _this25.editorID).files;
-              var url = settingsDOM.querySelector('#url-' + _this25.editorID).value;
-              var alt = settingsDOM.querySelector('#alt-' + _this25.editorID).value;
+              var files = settingsDOM.querySelector('#file-' + _this26.editorID).files;
+              var url = settingsDOM.querySelector('#url-' + _this26.editorID).value;
+              var alt = settingsDOM.querySelector('#alt-' + _this26.editorID).value;
               var altText = alt;
               var fileType = 'unknown';
 
@@ -7752,9 +7762,9 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                   fileType = 'image';
                 } else if (['mp4', 'webm', 'ogg', 'avi', 'mov'].includes(fileExt)) {
                   fileType = 'video';
-                } else if (_this25.isYouTubeURL(url)) {
+                } else if (_this26.isYouTubeURL(url)) {
                   fileType = 'youtube';
-                } else if (_this25.isVimeoURL(url)) {
+                } else if (_this26.isVimeoURL(url)) {
                   fileType = 'vimeo';
                 }
                 altText = altText !== '' ? altText : filename;
@@ -7770,9 +7780,9 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               } else if (fileType === 'video') {
                 mediaElement = "<br><div class=\"media-wrapper\"><video src=\"".concat(mediaItem, "\" controls></video></div><br>");
               } else if (fileType === 'youtube') {
-                mediaElement = "<br>".concat(_this25.getYouTubeEmbedCode(mediaItem), "<br>");
+                mediaElement = "<br>".concat(_this26.getYouTubeEmbedCode(mediaItem), "<br>");
               } else if (fileType === 'vimeo') {
-                mediaElement = "<br>".concat(_this25.getVimeoEmbedCode(mediaItem), "<br>");
+                mediaElement = "<br>".concat(_this26.getVimeoEmbedCode(mediaItem), "<br>");
               } else {
                 mediaElement = false;
               }
@@ -7782,7 +7792,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 document.execCommand('insertHTML', false, "<br>".concat(mediaElement, "<br>"));
                 settingsDOM.classList.remove('active'); // Close PopUp
 
-                _this25.mediaPopover(); // Config Media Popover
+                _this26.mediaPopover(); // Config Media Popover
               }
             };
 
@@ -7800,7 +7810,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "mediaPopover",
           value: function mediaPopover() {
-            var _this26 = this;
+            var _this27 = this;
             // Use event delegation to prevent duplicate listeners
             var mediaItems = this.playGround.querySelectorAll('img, .media-wrapper');
             mediaItems.forEach(function (mediaItem) {
@@ -7831,7 +7841,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 popoverDOM.innerHTML = "\n          <button type=\"button\" title=\"Align Left\" data-media-action=\"align-left\">Align Left</button>\n          <button type=\"button\" title=\"Align Center\" data-media-action=\"align-center\">Align Center</button>\n          <button type=\"button\" title=\"Align Right\" data-media-action=\"align-right\">Align Right</button>\n          <button type=\"button\" title=\"Inline\" data-media-action=\"inline\">Inline</button>\n          <select data-media-action=\"width\">".concat(options, "</select>\n          <button type=\"button\" title=\"Delete\" data-media-action=\"delete\">Delete</button>\n        ");
 
                 // Remove any existing popover first
-                var existingPopover = _this26.editor.querySelector('.ozz-wyg-media-actions');
+                var existingPopover = _this27.editor.querySelector('.ozz-wyg-media-actions');
                 if (existingPopover) {
                   existingPopover.remove();
                 }
@@ -7839,16 +7849,16 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
 
                 // Position popover element at the click point
                 // Get the editor's position relative to viewport
-                var editorRect = _this26.editor.getBoundingClientRect();
+                var editorRect = _this27.editor.getBoundingClientRect();
 
                 // Calculate position relative to editor container
                 var relativeX = e.clientX - editorRect.left;
                 var relativeY = e.clientY - editorRect.top;
 
                 // Ensure editor has relative positioning for absolute children
-                var editorPosition = window.getComputedStyle(_this26.editor).position;
+                var editorPosition = window.getComputedStyle(_this27.editor).position;
                 if (editorPosition === 'static') {
-                  _this26.editor.style.position = 'relative';
+                  _this27.editor.style.position = 'relative';
                 }
 
                 // Set position relative to editor (not absolute screen coordinates)
@@ -7892,8 +7902,8 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
                 // Close popover
                 var _tempCloseEvent = function tempCloseEvent(ev) {
                   if (!popoverDOM.contains(ev.target) && ev.target !== popoverDOM && ev.target !== mediaItem) {
-                    var _this26$editor$queryS;
-                    (_this26$editor$queryS = _this26.editor.querySelector('.ozz-wyg-media-actions')) === null || _this26$editor$queryS === void 0 || _this26$editor$queryS.remove();
+                    var _this27$editor$queryS;
+                    (_this27$editor$queryS = _this27.editor.querySelector('.ozz-wyg-media-actions')) === null || _this27$editor$queryS === void 0 || _this27$editor$queryS.remove();
                     document.removeEventListener('click', _tempCloseEvent);
                   }
                 };
@@ -8021,7 +8031,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "toggleCodeView",
           value: function toggleCodeView() {
-            var _this27 = this;
+            var _this28 = this;
             if (this.isHTML()) {
               this.playGround.classList.remove('ozz-wyg-html-view');
               // Parse HTML from text content
@@ -8029,7 +8039,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               this.playGround.innerHTML = htmlContent;
               // Re-initialize all interactive features after switching back to visual view
               setTimeout(function () {
-                _this27.initializeContentFeatures();
+                _this28.initializeContentFeatures();
               }, 0);
             } else {
               this.playGround.querySelectorAll('[contenteditable="false"]').forEach(function (element) {
@@ -8112,7 +8122,7 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
         }, {
           key: "setValue",
           value: function setValue(value) {
-            var _this28 = this;
+            var _this29 = this;
             var editorID = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
             if (value === undefined || value === null) return;
             var targetInstance = null;
@@ -8141,21 +8151,21 @@ function _arrayLikeToArray2(r, a) { (null == a || a > r.length) && (a = r.length
               // Use captured values in closure to ensure correct editor instance
               setTimeout(function () {
                 // Set context for initialization using captured values
-                var originalEditor = _this28.editor;
-                var originalPlayGround = _this28.playGround;
-                var originalEditorID = _this28.editorID;
-                _this28.editor = editorToSet;
-                _this28.playGround = playGroundToSet;
-                _this28.editorID = editorIDToSet;
+                var originalEditor = _this29.editor;
+                var originalPlayGround = _this29.playGround;
+                var originalEditorID = _this29.editorID;
+                _this29.editor = editorToSet;
+                _this29.playGround = playGroundToSet;
+                _this29.editorID = editorIDToSet;
                 if (editorIDToSet) {
-                  _this28.currentEditorID = editorIDToSet;
+                  _this29.currentEditorID = editorIDToSet;
                 }
-                _this28.initializeContentFeatures();
+                _this29.initializeContentFeatures();
 
                 // Restore original context after initialization
-                _this28.editor = originalEditor;
-                _this28.playGround = originalPlayGround;
-                _this28.editorID = originalEditorID;
+                _this29.editor = originalEditor;
+                _this29.playGround = originalPlayGround;
+                _this29.editorID = originalEditorID;
               }, 0);
             }
           }
